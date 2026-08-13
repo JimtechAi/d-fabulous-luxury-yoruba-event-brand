@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --color-burgundy-deep: #5A1020;
+  --color-burgundy-dark: #320812;
+  --color-gold-luxury: #C9A227;
+  --color-champagne-soft: #E8D8B5;
+  --color-ivory-warm: #F8F4EC;
+  --color-black-rich: #0B0B0B;
+  --color-charcoal-soft: #252525;
+
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --spacing-4px: 4px;
+  --spacing-8px: 8px;
+  --spacing-12px: 12px;
+  --spacing-16px: 16px;
+  --spacing-24px: 24px;
+  --spacing-32px: 32px;
+  --spacing-48px: 48px;
+  --spacing-64px: 64px;
+  --spacing-80px: 80px;
+  --spacing-96px: 96px;
+  --spacing-128px: 128px;
+  --spacing-160px: 160px;
+}
+
+@layer base {
+  :root {
+    --burgundy-deep: #5A1020;
+    --burgundy-dark: #320812;
+    --gold-luxury: #C9A227;
+    --champagne-soft: #E8D8B5;
+    --ivory-warm: #F8F4EC;
+    --black-rich: #0B0B0B;
+    --charcoal-soft: #252525;
+  }
+
+  body {
+    background-color: var(--ivory-warm);
+    color: var(--black-rich);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Focus ring style according to WCAG 2.2 AA standards */
+  *:focus-visible {
+    outline: 2px solid var(--gold-luxury);
+    outline-offset: 3px;
+  }
+}
+
+/* Custom subtle cultural pattern motif utility */
+.cultural-pattern-subtle {
+  background-image: radial-gradient(var(--gold-luxury) 0.5px, transparent 0.5px);
+  background-size: 16px 16px;
+  opacity: 0.08;
+}
+
+.cultural-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold-luxury) 50%, transparent 100%);
+  opacity: 0.4;
+}
+
+/* Reduced motion preference override */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
