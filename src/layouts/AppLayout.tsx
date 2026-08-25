@@ -41,8 +41,8 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`Visit D’Fabulous on ${name}`}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gold-luxury/60 bg-black-rich/85 text-gold-luxury shadow-lg backdrop-blur-sm transition-colors hover:bg-gold-luxury hover:text-black-rich focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-luxury focus-visible:ring-offset-2 focus-visible:ring-offset-ivory-warm sm:h-11 sm:w-11"
+            aria-label={name}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gold-luxury/70 bg-burgundy-dark/95 text-gold-luxury shadow-[0_4px_14px_rgba(42,8,18,0.28)] backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:border-gold-luxury hover:bg-burgundy-deep hover:shadow-[0_0_16px_rgba(201,164,92,0.34)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-luxury focus-visible:ring-offset-2 focus-visible:ring-offset-ivory-warm sm:h-11 sm:w-11 sm:hover:scale-105"
           >
             <Icon className="h-4 w-4" aria-hidden="true" />
           </a>

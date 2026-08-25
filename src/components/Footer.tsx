@@ -62,7 +62,7 @@ export const Footer: React.FC = () => {
           {/* Col 1: Brand Info */}
           <div>
             <img
-              src="/assets/brand/logo/dfabulous-logo.web.jpeg"
+              src="/assets/brand/favicon/favicon.jpeg"
               alt="D’Fabulous official logo"
               className="h-16 sm:h-20 w-auto max-w-[240px] object-contain mb-4 select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.28)]"
             />

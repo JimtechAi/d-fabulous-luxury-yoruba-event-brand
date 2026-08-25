@@ -44,7 +44,7 @@ export const Header: React.FC = () => {
             ariaLabel="D’Fabulous Homepage"
           >
             <img
-              src="/assets/brand/logo/dfabulous-logo.web.jpeg"
+              src="/assets/brand/favicon/favicon.jpeg"
               alt="D’Fabulous official logo"
               className="h-12 sm:h-14 w-auto max-w-[200px] sm:max-w-[220px] object-contain select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.24)]"
             />
