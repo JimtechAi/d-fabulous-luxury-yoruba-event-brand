@@ -64,7 +64,7 @@ export const Footer: React.FC = () => {
             <img
               src="/assets/brand/logo/dfabulous-logo.web.jpeg"
               alt="D’Fabulous official logo"
-              className="h-20 w-auto object-contain mb-4 select-none"
+              className="h-16 sm:h-20 w-auto max-w-[240px] object-contain mb-4 select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.28)]"
             />
             <div className="text-[9px] font-sans tracking-[0.25em] uppercase text-gold-luxury mb-4 font-light">
               LUXURY YORUBA EVENTS

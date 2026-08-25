@@ -107,6 +107,35 @@ export function normalizeGalleryImageUrl(imageUrl: string): string {
   return trimmedUrl;
 }
 
+const LOCAL_GALLERY_ITEMS: DbGalleryItem[] = Array.from({ length: 76 }, (_, index) => {
+  const filename = `image${index + 1}.webp.jpeg`;
+  return {
+    id: `local-gallery-${index + 1}`,
+    title: `Image ${index + 1}`,
+    image_url: `/images/gallery/${filename}`,
+    alt_text: `D’Fabulous Yoruba celebration image ${index + 1}`,
+    category: 'Gallery',
+    caption: 'D’Fabulous Yoruba celebration',
+    aspect_ratio: '4/3',
+    is_featured: index < 6,
+    display_order: index + 1,
+  };
+});
+
+const LOCAL_VIDEO_ITEMS: DbVideoItem[] = Array.from({ length: 33 }, (_, index) => {
+  const filename = `video${index + 1}.webp.mp4`;
+  return {
+    id: `local-video-${index + 1}`,
+    title: `Video ${index + 1}`,
+    video_url: `/videos/${filename}`,
+    poster_url: `/images/video-thumbnails/${filename.replace(/\.mp4$/i, '.jpg')}`,
+    alt_text: `D’Fabulous Yoruba celebration video ${index + 1}`,
+    category: 'Videos',
+    caption: 'D’Fabulous cinematic event highlight',
+    display_order: index + 1,
+  };
+});
+
 export interface DbTestimonial {
   id: string;
   quote: string;
@@ -337,22 +366,10 @@ export async function getGalleryItems(): Promise<DbGalleryItem[]> {
       return result.data as DbGalleryItem[];
     }
   } catch {
-    // Fallback
+    return LOCAL_GALLERY_ITEMS;
   }
 
-  if (!isSupabaseConfigured) return [];
-
-  try {
-    const { data, error } = await supabase
-      .from('gallery')
-      .select('*')
-      .order('display_order', { ascending: true });
-
-    if (error || !data) return [];
-    return data as DbGalleryItem[];
-  } catch {
-    return [];
-  }
+  return LOCAL_GALLERY_ITEMS;
 }
 
 /** Fetches videos from the single public/videos directory through the server API. */
@@ -364,10 +381,10 @@ export async function getVideoItems(): Promise<DbVideoItem[]> {
       return result.data as DbVideoItem[];
     }
   } catch {
-    // API failed
+    return LOCAL_VIDEO_ITEMS;
   }
 
-  return [];
+  return LOCAL_VIDEO_ITEMS;
 }
 
 /**

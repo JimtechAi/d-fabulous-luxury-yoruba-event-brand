@@ -10,7 +10,13 @@ import { SkipToContent } from '../components/SkipToContent';
 import { Button } from '../components/Button';
 import { BRAND_INFO } from '../data/brand';
 import { useRouter } from '../lib/router';
-import { CalendarCheck, MessageCircle, Phone } from 'lucide-react';
+import { CalendarCheck, Facebook, Instagram, MessageCircle, Music2, Phone } from 'lucide-react';
+
+const FLOATING_SOCIAL_LINKS = [
+  { name: 'Facebook', href: 'https://www.facebook.com/share/1Gw84T9QFs/', icon: Facebook },
+  { name: 'TikTok', href: 'https://www.tiktok.com/@dfabulousss', icon: Music2 },
+  { name: 'Instagram', href: 'https://www.instagram.com/dfabulouss/', icon: Instagram },
+] as const;
 
 // Pages whose primary on-page action already is the booking/contact conversion,
 // so the persistent bar would only compete with it rather than help.
@@ -28,6 +34,20 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
         {children}
       </main>
       <Footer />
+      <div className="fixed right-3 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-2 sm:right-5" aria-label="Social media links">
+        {FLOATING_SOCIAL_LINKS.map(({ name, href, icon: Icon }) => (
+          <a
+            key={name}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Visit D’Fabulous on ${name}`}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gold-luxury/60 bg-black-rich/85 text-gold-luxury shadow-lg backdrop-blur-sm transition-colors hover:bg-gold-luxury hover:text-black-rich focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-luxury focus-visible:ring-offset-2 focus-visible:ring-offset-ivory-warm sm:h-11 sm:w-11"
+          >
+            <Icon className="h-4 w-4" aria-hidden="true" />
+          </a>
+        ))}
+      </div>
       {/* Reserves space so the fixed bar below never overlaps the final footer content on mobile. */}
       {showPersistentCta && <div className="h-16 sm:h-14" aria-hidden="true" />}
       {showPersistentCta && (

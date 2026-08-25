@@ -16,6 +16,10 @@ export const PageHero: React.FC<PageHeroProps> = ({
   mediaSlot,
   align = 'left',
 }) => {
+  const pageBreadcrumbs = breadcrumbs[0]?.label.toLowerCase() === 'home'
+    ? breadcrumbs.slice(1)
+    : [{ label: 'Home', href: '/' }, ...breadcrumbs];
+
   return (
     <div className="relative bg-burgundy-dark text-ivory-warm pt-32 pb-20 sm:pt-40 sm:pb-28 border-b border-gold-luxury/20 overflow-hidden">
       {/* Background Cultural Accent Pattern */}
@@ -23,7 +27,7 @@ export const PageHero: React.FC<PageHeroProps> = ({
 
       <Container className="relative z-10">
         {/* Breadcrumb Navigation */}
-        {breadcrumbs.length > 0 && (
+        {pageBreadcrumbs.length > 0 && (
           <nav aria-label="Breadcrumb" className="mb-6">
             <ol className="flex flex-wrap items-center gap-2 text-xs font-sans tracking-widest uppercase text-champagne-soft/70">
               <li>
@@ -31,7 +35,7 @@ export const PageHero: React.FC<PageHeroProps> = ({
                   Home
                 </Link>
               </li>
-              {breadcrumbs.map((crumb, idx) => (
+              {pageBreadcrumbs.map((crumb, idx) => (
                 <li key={idx} className="flex items-center gap-2">
                   <span className="text-gold-luxury/40">/</span>
                   {crumb.href ? (
