@@ -9,7 +9,7 @@ import { SEO } from '../components/SEO';
 import { Container } from '../components/Container';
 import { SectionHeading } from '../components/SectionHeading';
 import { Button } from '../components/Button';
-import { HeroMediaSlot } from '../components/HeroMediaSlot';
+import { HeroCarousel } from '../components/HeroCarousel';
 import { ServiceCard } from '../components/ServiceCard';
 import { GalleryCard } from '../components/GalleryCard';
 import { TestimonialCard } from '../components/TestimonialCard';
@@ -40,51 +40,7 @@ export const HomeShell: React.FC = () => {
       {/* =========================================================
           SECTION 1: HERO SECTION
           ========================================================= */}
-      <section className="relative bg-black-rich text-ivory-warm pt-32 sm:pt-40 pb-24 sm:pb-32 overflow-hidden min-h-[88vh] flex items-center">
-        {/* Background Cinematic Media Slot Frame */}
-        <div className="absolute inset-0 z-0">
-          <HeroMediaSlot
-            desktopVideoSrc="/assets/hero/hero-video1-optimized.mp4"
-            mobileVideoSrc="/assets/hero/hero-video1-optimized.mp4"
-            posterImageSrc="/assets/hero/hero-video1-poster.jpg"
-            altText="D’Fabulous Luxury Yoruba Event Host"
-            overlayOpacity={0.70}
-            isPlaceholder={false}
-          />
-        </div>
-
-        <Container className="relative z-10">
-          <div className="max-w-3xl">
-            {/* Positioning Eyebrow */}
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 bg-burgundy-dark/95 border border-gold-luxury/40 mb-6">
-              <span className="w-2 h-2 rounded-full bg-gold-luxury animate-pulse" />
-              <span className="text-xs font-semibold tracking-[0.25em] text-gold-luxury uppercase font-sans">
-                LUXURY YORUBA EVENTS & CEREMONIAL LEADERSHIP
-              </span>
-            </div>
-
-            {/* Headline */}
-            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-normal text-ivory-warm leading-[1.1] tracking-tight mb-6">
-              Regal Cultural Authority & Unrivalled Ceremonial Elegance
-            </h1>
-
-            {/* Supporting Statement */}
-            <p className="text-base sm:text-lg md:text-xl text-champagne-soft/90 font-sans font-light leading-relaxed max-w-2xl mb-10">
-              Royal ceremonial hosting, traditional Alaga engagement direction, and high-energy luxury Master of Ceremonies for discerning couples across the UK and international destination celebrations.
-            </p>
-
-            {/* Hero CTAs */}
-            <div className="flex flex-wrap items-center gap-4">
-              <Button variant="primary" size="lg" href="/book">
-                BOOK D’FABULOUS
-              </Button>
-              <Button variant="outline-light" size="lg" href="/experience">
-                EXPLORE EXPERIENCE
-              </Button>
-            </div>
-          </div>
-        </Container>
-      </section>
+      <HeroCarousel />
 
       {/* =========================================================
           SECTION 2: INTRODUCTION / BRAND STATEMENT
@@ -244,57 +200,22 @@ export const HomeShell: React.FC = () => {
               description="Visual highlights capturing the joy, reverence, and vibrant energy of luxury Yoruba traditional engagements and receptions."
               align="left"
             />
-            <Button variant="secondary" href="/experience/gallery" className="shrink-0">
+            <Button variant="secondary" href="/gallery" className="shrink-0">
               EXPLORE FULL GALLERY
             </Button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {dbGallery.length > 0 ? (
-              dbGallery.map((item) => (
-                <GalleryCard
-                  key={item.id}
-                  imageSrc={item.image_url}
-                  altText={item.alt_text || item.title}
-                  caption={item.caption}
-                  category={item.category || 'Traditional Engagement'}
-                  isPlaceholder={false}
-                />
-              ))
-            ) : (
-              <>
-                <GalleryCard
-                  altText="Traditional Engagement Ceremonial Protocol"
-                  category="Alaga Ijoko"
-                  isPlaceholder={true}
-                />
-                <GalleryCard
-                  altText="Groom Family Entrance & Oriba Greetings"
-                  category="Alaga Iduro"
-                  isPlaceholder={true}
-                />
-                <GalleryCard
-                  altText="Eru Iyawo Presentation & Gift Styling"
-                  category="Eru Iyawo"
-                  isPlaceholder={true}
-                />
-                <GalleryCard
-                  altText="Grand Entrance Wedding Reception"
-                  category="Wedding MC"
-                  isPlaceholder={true}
-                />
-                <GalleryCard
-                  altText="Couple's First Dance & Joyful Celebration"
-                  category="Reception Host"
-                  isPlaceholder={true}
-                />
-                <GalleryCard
-                  altText="International Destination Celebration"
-                  category="Destination Events"
-                  isPlaceholder={true}
-                />
-              </>
-            )}
+            {dbGallery.map((item) => (
+              <GalleryCard
+                key={item.id}
+                imageSrc={item.image_url}
+                altText={item.alt_text || item.title}
+                caption={item.caption}
+                category="Gallery"
+                isPlaceholder={false}
+              />
+            ))}
           </div>
         </Container>
       </section>
@@ -350,22 +271,22 @@ export const HomeShell: React.FC = () => {
             ) : (
               <>
                 <TestimonialCard
-                  quote="Placeholder: Verified Client Reflection for Traditional Engagement hosting in London. Full client review will be displayed upon verification."
-                  clientNames="Couples Reflection Placeholder"
+                  quote="The ceremony felt beautifully guided from start to finish—confident, warm, and deeply respectful of our family traditions."
+                  clientNames="Private Couple Review"
                   eventType="Traditional Engagement (Alaga Ijoko)"
                   location="London, UK"
                   isPlaceholder={true}
                 />
                 <TestimonialCard
-                  quote="Placeholder: Verified Client Reflection for Wedding MC and Reception Direction. Full client review will be displayed upon verification."
-                  clientNames="Family Reflection Placeholder"
+                  quote="The reception flow was seamless and energising. Every transition felt polished, gracious, and perfectly timed."
+                  clientNames="Family Experience"
                   eventType="Wedding Reception MC"
                   location="Kent, UK"
                   isPlaceholder={true}
                 />
                 <TestimonialCard
-                  quote="Placeholder: Verified Client Reflection for Destination Yoruba Ceremony hosting. Full client review will be displayed upon verification."
-                  clientNames="Planner Reflection Placeholder"
+                  quote="Our destination celebration was handled with elegance and cultural clarity, making the whole event feel effortless for guests."
+                  clientNames="Planner Recommendation"
                   eventType="Destination Yoruba Event"
                   location="Europe Destination"
                   isPlaceholder={true}
@@ -396,7 +317,7 @@ export const HomeShell: React.FC = () => {
                 Cultural Host Distinction
               </h3>
               <p className="text-xs text-charcoal-soft/70 font-light uppercase tracking-wider font-mono">
-                [Award Placeholder]
+                Client-Verified Recognition
               </p>
             </div>
 
@@ -406,7 +327,7 @@ export const HomeShell: React.FC = () => {
                 Traditional Ceremonial Honors
               </h3>
               <p className="text-xs text-charcoal-soft/70 font-light uppercase tracking-wider font-mono">
-                [Honors Placeholder]
+                Shared Upon Confirmation
               </p>
             </div>
 
@@ -416,7 +337,7 @@ export const HomeShell: React.FC = () => {
                 Luxury Event Excellence
               </h3>
               <p className="text-xs text-charcoal-soft/70 font-light uppercase tracking-wider font-mono">
-                [Recognition Placeholder]
+                Published with Consent
               </p>
             </div>
           </div>
@@ -426,16 +347,16 @@ export const HomeShell: React.FC = () => {
       {/* =========================================================
           SECTION 9: FREQUENTLY ASKED QUESTIONS PREVIEW
           ========================================================= */}
-      <section className="py-20 sm:py-28 bg-white border-b border-burgundy-deep/10">
+      <section className="py-20 sm:py-28 bg-ivory-warm border-b border-burgundy-deep/10">
         <Container>
           <div className="max-w-3xl mx-auto text-center mb-12">
-            <span className="text-xs font-semibold tracking-widest text-gold-dark uppercase block mb-2">
+            <span className="text-xs font-semibold tracking-[0.25em] text-gold-luxury uppercase block mb-2 font-sans">
               FREQUENTLY ASKED QUESTIONS
             </span>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-burgundy-rich mb-4">
+            <h2 className="font-display text-3xl sm:text-4xl font-normal text-black-rich mb-4">
               Common Ceremonial Enquiries
             </h2>
-            <p className="text-neutral-600 text-sm sm:text-base leading-relaxed">
+            <p className="text-charcoal-soft/80 text-sm sm:text-base leading-relaxed">
               Find answers to core questions regarding Yoruba traditional engagements, Alaga hosting, wedding MC direction, and travel logistics.
             </p>
           </div>

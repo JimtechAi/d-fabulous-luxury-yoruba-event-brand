@@ -139,6 +139,14 @@ export const FaqShell: React.FC = () => {
       <SEO
         title="Frequently Asked Questions | D’Fabulous Yoruba Events"
         description="Find clear answers about D’Fabulous services, Alaga Iduro and Alaga Ijoko hosting, wedding MC direction, destination travel, and booking procedures."
+        canonicalUrl={`${window.location.origin}/faq`}
+        schemaType="faq"
+        schemaItems={[
+          { question: 'What core services does D’Fabulous provide?', answer: 'D’Fabulous provides Yoruba traditional engagement hosting, Wedding MC, engagement protocol coordination, private event hosting, and Eru Iyawo presentation styling.' },
+          { question: 'What is the difference between Alaga Iduro and Alaga Ijoko?', answer: 'Alaga Iduro represents the groom’s family. Alaga Ijoko represents and hosts on behalf of the bride’s family during the traditional engagement.' },
+          { question: 'Does D’Fabulous travel internationally?', answer: 'D’Fabulous provides destination event hosting across the United Kingdom, Nigeria, Europe, North America, and other international destinations.' },
+          { question: 'How can a client check date availability?', answer: 'Submit event details through the booking form or contact the team directly by email or WhatsApp.' },
+        ]}
       />
 
       <PageHero
@@ -155,15 +163,15 @@ export const FaqShell: React.FC = () => {
           <div className="max-w-4xl mx-auto space-y-12">
             
             {/* Introductory Callout */}
-            <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gold-primary/20 shadow-sm flex flex-col sm:flex-row items-center gap-6">
-              <div className="p-4 bg-burgundy-rich text-gold-primary rounded-2xl shrink-0">
+            <div className="bg-ivory-warm p-6 sm:p-8 border border-burgundy-deep/15 flex flex-col sm:flex-row items-center gap-6">
+              <div className="p-4 bg-burgundy-deep text-gold-luxury shrink-0">
                 <HelpCircle className="w-8 h-8" />
               </div>
               <div>
-                <h2 className="font-serif font-bold text-xl text-burgundy-rich">
+                <h2 className="font-display text-xl font-normal text-burgundy-deep">
                   Everything You Need to Know Before Booking
                 </h2>
-                <p className="text-xs sm:text-sm text-neutral-600 mt-1 leading-relaxed">
+                <p className="text-xs sm:text-sm text-charcoal-soft/80 mt-1 leading-relaxed">
                   Browse our core questions below. If you have specific ceremonial requirements or unique family custom questions, our consultation team is ready to assist.
                 </p>
               </div>
@@ -173,11 +181,11 @@ export const FaqShell: React.FC = () => {
             <FaqAccordion items={faqList} defaultOpenId="q1" />
 
             {/* Still Have Questions CTA */}
-            <div className="p-8 sm:p-12 rounded-2xl bg-burgundy-rich text-white text-center space-y-6 shadow-xl">
-              <h3 className="font-serif text-2xl sm:text-3xl font-bold text-gold-primary">
+            <div className="p-8 sm:p-12 border border-gold-luxury/30 bg-burgundy-deep text-ivory-warm text-center space-y-6">
+              <h3 className="font-display text-2xl sm:text-3xl font-normal text-gold-luxury">
                 Have Additional Ceremonial Questions?
               </h3>
-              <p className="text-neutral-200 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
+              <p className="text-champagne-soft/85 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
                 Contact our booking office directly for custom inquiries, family protocol alignment, or international destination event planning.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-4 pt-2">

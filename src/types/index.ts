@@ -53,6 +53,10 @@ export interface PageMetaProps {
   canonicalUrl?: string;
   ogImage?: string;
   ogType?: 'website' | 'article';
+  schemaType?: 'service' | 'faq';
+  schemaName?: string;
+  schemaItems?: { question: string; answer: string }[];
+  noindex?: boolean;
 }
 
 export interface ImageMediaProps {
@@ -78,7 +82,7 @@ export interface HeroMediaSlotProps {
   isPlaceholder?: boolean;
 }
 
-export type ButtonVariant = 'primary' | 'secondary' | 'text' | 'outline-light';
+export type ButtonVariant = 'primary' | 'secondary' | 'text' | 'outline' | 'outline-light' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

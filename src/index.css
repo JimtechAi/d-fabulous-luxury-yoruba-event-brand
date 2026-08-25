@@ -3,13 +3,18 @@
 @theme {
   --color-burgundy-deep: #5A1020;
   --color-burgundy-dark: #320812;
+  --color-burgundy-rich: #5A1020;
   --color-gold-luxury: #C9A227;
+  --color-gold-primary: #C9A227;
+  --color-gold-dark: #9D7B16;
+  --color-gold-light: #E8D8B5;
   --color-champagne-soft: #E8D8B5;
   --color-ivory-warm: #F8F4EC;
   --color-black-rich: #0B0B0B;
   --color-charcoal-soft: #252525;
 
   --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-serif: "Cormorant Garamond", Georgia, serif;
   --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 
   --spacing-4px: 4px;
@@ -62,6 +67,17 @@
   height: 1px;
   background: linear-gradient(90deg, transparent 0%, var(--gold-luxury) 50%, transparent 100%);
   opacity: 0.4;
+}
+
+/* Slow cinematic zoom applied to the active hero carousel image */
+@keyframes heroSlowZoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+.hero-slide-zoom {
+  animation: heroSlowZoom 7000ms ease-out forwards;
+  will-change: transform;
 }
 
 /* Reduced motion preference override */

@@ -3,13 +3,13 @@
  * Reservation consultation page for event date availability inquiries and service specifications.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container } from '../components/Container';
 import { PageHero } from '../components/PageHero';
 import { Button } from '../components/Button';
 import { SEO } from '../components/SEO';
 import { BRAND_INFO, SERVICES_LIST } from '../data/brand';
-import { submitBooking } from '../lib/db';
+import { getEventAvailability, submitBooking } from '../lib/db';
 import { Calendar, CheckCircle2, AlertCircle, Send, ShieldCheck, Clock, MapPin, Sparkles } from 'lucide-react';
 
 interface FormData {
@@ -28,7 +28,6 @@ interface FormErrors {
   fullName?: string;
   email?: string;
   phone?: string;
-  eventDate?: string;
   eventLocation?: string;
   selectedServices?: string;
 }
@@ -49,6 +48,26 @@ export const BookShell: React.FC = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+  const [unavailableDates, setUnavailableDates] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    void getEventAvailability()
+      .then((rows) => setUnavailableDates(new Set(
+        rows
+          .filter((row) => row.available === false || row.reason === 'booked' || row.reason === 'owner_blocked')
+          .map((row) => row.event_date.slice(0, 10)),
+      )))
+      .catch(() => undefined);
+  }, []);
+
+  const normalizeDate = (value: string): string => value.slice(0, 10);
+
+  const getDateError = (date: string): string | undefined => {
+    if (!date) return undefined;
+    return unavailableDates.has(normalizeDate(date)) ? 'This date is unavailable. Please select another date.' : undefined;
+  };
+
+  const currentDateError = getDateError(formData.eventDate);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -67,9 +86,7 @@ export const BookShell: React.FC = () => {
       newErrors.phone = 'Telephone / WhatsApp number is required';
     }
 
-    if (!formData.eventDate) {
-      newErrors.eventDate = 'Proposed event date is required';
-    }
+    const dateError = formData.eventDate ? getDateError(formData.eventDate) : 'Proposed event date is required';
 
     if (!formData.eventLocation.trim()) {
       newErrors.eventLocation = 'Event city/location is required';
@@ -80,7 +97,7 @@ export const BookShell: React.FC = () => {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return !dateError && Object.keys(newErrors).length === 0;
   };
 
   const handleServiceToggle = (title: string) => {
@@ -160,52 +177,52 @@ export const BookShell: React.FC = () => {
             {/* Left Column: Guidelines & Assurance */}
             <div className="lg:col-span-5 space-y-8">
               <div>
-                <span className="inline-block px-3 py-1 mb-3 text-xs font-semibold tracking-widest text-burgundy-rich uppercase bg-gold-light/20 rounded-full border border-gold-primary/30">
+                <span className="text-xs font-semibold tracking-[0.25em] text-gold-luxury uppercase block mb-3 font-sans">
                   Direct Availability Inquiry
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-serif font-bold text-burgundy-rich">
+                <h2 className="font-display text-3xl sm:text-4xl font-normal text-black-rich">
                   Bespoke Event Reservation
                 </h2>
-                <p className="mt-4 text-neutral-700 leading-relaxed">
+                <p className="mt-4 text-charcoal-soft/80 leading-relaxed">
                   Due to high demand across key wedding seasons in the UK, Europe, and international destinations, date reservations are managed strictly on a first-confirmed basis.
                 </p>
               </div>
 
-              <div className="space-y-6">
-                <div className="flex items-start gap-4 p-4 rounded-xl bg-white/80 border border-gold-primary/20 shadow-sm">
-                  <Clock className="w-6 h-6 text-gold-dark shrink-0 mt-1" />
+              <div className="space-y-4">
+                <div className="flex items-start gap-4 p-4 bg-ivory-warm border border-burgundy-deep/15 hover:border-gold-luxury/50 transition-colors duration-300">
+                  <Clock className="w-6 h-6 text-gold-luxury shrink-0 mt-1" />
                   <div>
-                    <h3 className="font-semibold text-burgundy-rich">24–48 Hour Response Guarantee</h3>
-                    <p className="text-sm text-neutral-600 mt-1">
+                    <h3 className="font-semibold text-burgundy-deep">24–48 Hour Response Guarantee</h3>
+                    <p className="text-sm text-charcoal-soft/70 mt-1">
                       Our team will review your requested date, event location, and ceremonial requirements before confirming availability.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-4 rounded-xl bg-white/80 border border-gold-primary/20 shadow-sm">
-                  <ShieldCheck className="w-6 h-6 text-gold-dark shrink-0 mt-1" />
+                <div className="flex items-start gap-4 p-4 bg-ivory-warm border border-burgundy-deep/15 hover:border-gold-luxury/50 transition-colors duration-300">
+                  <ShieldCheck className="w-6 h-6 text-gold-luxury shrink-0 mt-1" />
                   <div>
-                    <h3 className="font-semibold text-burgundy-rich">Confidential Consultation</h3>
-                    <p className="text-sm text-neutral-600 mt-1">
+                    <h3 className="font-semibold text-burgundy-deep">Confidential Consultation</h3>
+                    <p className="text-sm text-charcoal-soft/70 mt-1">
                       All celebration specifications and family details are handled with complete discretion and professional care.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-4 rounded-xl bg-white/80 border border-gold-primary/20 shadow-sm">
-                  <Sparkles className="w-6 h-6 text-gold-dark shrink-0 mt-1" />
+                <div className="flex items-start gap-4 p-4 bg-ivory-warm border border-burgundy-deep/15 hover:border-gold-luxury/50 transition-colors duration-300">
+                  <Sparkles className="w-6 h-6 text-gold-luxury shrink-0 mt-1" />
                   <div>
-                    <h3 className="font-semibold text-burgundy-rich">Tailored Cultural Guidance</h3>
-                    <p className="text-sm text-neutral-600 mt-1">
+                    <h3 className="font-semibold text-burgundy-deep">Tailored Cultural Guidance</h3>
+                    <p className="text-sm text-charcoal-soft/70 mt-1">
                       Whether you require combined Alaga Iduro and Alaga Ijoko hosting or high-energy reception MC hosting, we structure bespoke packages.
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="p-6 rounded-2xl bg-burgundy-rich text-white space-y-3">
-                <h4 className="font-serif font-semibold text-gold-primary text-lg">Direct Inquiries</h4>
-                <p className="text-sm text-neutral-200">
+              <div className="p-6 border border-gold-luxury/30 bg-burgundy-deep text-ivory-warm space-y-3">
+                <h4 className="font-display text-lg font-normal text-gold-luxury">Direct Inquiries</h4>
+                <p className="text-sm text-champagne-soft/85">
                   Prefer direct communication? You can also reach our booking office via email or phone.
                 </p>
                 <div className="text-sm pt-2 space-y-1">
@@ -234,6 +251,8 @@ export const BookShell: React.FC = () => {
                       variant="primary"
                       onClick={() => {
                         setStatus('idle');
+                        setErrors({});
+                        setErrorMessage('');
                         setFormData({
                           fullName: '',
                           email: '',
@@ -272,7 +291,7 @@ export const BookShell: React.FC = () => {
                   </h3>
 
                   {status === 'error' && (
-                    <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-3 text-sm">
+                    <div role="alert" className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-3 text-sm">
                       <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
                       <span>{errorMessage}</span>
                     </div>
@@ -287,6 +306,8 @@ export const BookShell: React.FC = () => {
                       <input
                         type="text"
                         id="fullName"
+                        aria-invalid={Boolean(errors.fullName)}
+                        aria-describedby={errors.fullName ? 'fullName-error' : undefined}
                         value={formData.fullName}
                         onChange={(e) => {
                           setFormData({ ...formData, fullName: e.target.value });
@@ -297,7 +318,7 @@ export const BookShell: React.FC = () => {
                         }`}
                         placeholder="e.g. Dr. Olumide Adeleke"
                       />
-                      {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>}
+                      {errors.fullName && <p id="fullName-error" className="mt-1 text-xs text-red-500">{errors.fullName}</p>}
                     </div>
 
                     {/* Email */}
@@ -308,6 +329,8 @@ export const BookShell: React.FC = () => {
                       <input
                         type="email"
                         id="email"
+                        aria-invalid={Boolean(errors.email)}
+                        aria-describedby={errors.email ? 'email-error' : undefined}
                         value={formData.email}
                         onChange={(e) => {
                           setFormData({ ...formData, email: e.target.value });
@@ -318,7 +341,7 @@ export const BookShell: React.FC = () => {
                         }`}
                         placeholder="name@example.com"
                       />
-                      {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
+                      {errors.email && <p id="email-error" className="mt-1 text-xs text-red-500">{errors.email}</p>}
                     </div>
                   </div>
 
@@ -331,6 +354,8 @@ export const BookShell: React.FC = () => {
                       <input
                         type="tel"
                         id="phone"
+                        aria-invalid={Boolean(errors.phone)}
+                        aria-describedby={errors.phone ? 'phone-error' : undefined}
                         value={formData.phone}
                         onChange={(e) => {
                           setFormData({ ...formData, phone: e.target.value });
@@ -341,7 +366,7 @@ export const BookShell: React.FC = () => {
                         }`}
                         placeholder="+44 7123 456789"
                       />
-                      {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
+                      {errors.phone && <p id="phone-error" className="mt-1 text-xs text-red-500">{errors.phone}</p>}
                     </div>
 
                     {/* Event Date */}
@@ -352,16 +377,20 @@ export const BookShell: React.FC = () => {
                       <input
                         type="date"
                         id="eventDate"
+                        aria-invalid={Boolean(currentDateError)}
                         value={formData.eventDate}
                         onChange={(e) => {
-                          setFormData({ ...formData, eventDate: e.target.value });
-                          if (errors.eventDate) setErrors({ ...errors, eventDate: undefined });
+                          const selectedDate = normalizeDate(e.target.value);
+                          setFormData((current) => ({ ...current, eventDate: selectedDate }));
                         }}
+                        min={new Date().toISOString().slice(0, 10)}
+                        aria-describedby={currentDateError ? 'eventDate-error' : 'eventDate-help'}
                         className={`w-full px-4 py-3 rounded-lg border text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-gold-primary ${
-                          errors.eventDate ? 'border-red-500 bg-red-50/20' : 'border-neutral-300 focus:border-gold-primary'
+                          currentDateError ? 'border-red-500 bg-red-50/20' : 'border-neutral-300 focus:border-gold-primary'
                         }`}
                       />
-                      {errors.eventDate && <p className="mt-1 text-xs text-red-500">{errors.eventDate}</p>}
+                      <p id="eventDate-help" className="mt-1 text-xs text-neutral-500">Unavailable dates cannot be selected.</p>
+                      {currentDateError && <p id="eventDate-error" className="mt-1 text-xs text-red-500">{currentDateError}</p>}
                     </div>
                   </div>
 
@@ -374,6 +403,8 @@ export const BookShell: React.FC = () => {
                       <input
                         type="text"
                         id="eventLocation"
+                        aria-invalid={Boolean(errors.eventLocation)}
+                        aria-describedby={errors.eventLocation ? 'eventLocation-error' : undefined}
                         value={formData.eventLocation}
                         onChange={(e) => {
                           setFormData({ ...formData, eventLocation: e.target.value });
@@ -384,7 +415,7 @@ export const BookShell: React.FC = () => {
                         }`}
                         placeholder="e.g. London, UK / Lagos, Nigeria"
                       />
-                      {errors.eventLocation && <p className="mt-1 text-xs text-red-500">{errors.eventLocation}</p>}
+                      {errors.eventLocation && <p id="eventLocation-error" className="mt-1 text-xs text-red-500">{errors.eventLocation}</p>}
                     </div>
 
                     {/* Guest Count */}
@@ -440,7 +471,7 @@ export const BookShell: React.FC = () => {
                         );
                       })}
                     </div>
-                    {errors.selectedServices && <p className="mt-2 text-xs text-red-500">{errors.selectedServices}</p>}
+                    {errors.selectedServices && <p id="selectedServices-error" className="mt-2 text-xs text-red-500">{errors.selectedServices}</p>}
                   </div>
 
                   {/* Additional Details */}

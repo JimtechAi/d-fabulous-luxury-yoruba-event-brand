@@ -3,7 +3,7 @@
  * Built for smooth SPA routing in AI Studio preview & straightforward VS Code migration.
  */
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 interface RouterContextType {
   currentPath: string;
@@ -30,12 +30,13 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const navigate = (path: string) => {
-    if (path === currentPath) return;
+  const navigate = useCallback((path: string) => {
+    const destination = new URL(path, window.location.origin);
+    if (destination.pathname === window.location.pathname && destination.search === window.location.search) return;
     window.history.pushState({}, '', path);
-    setCurrentPath(path);
+    setCurrentPath(destination.pathname);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
 
   return (
     <RouterContext.Provider value={{ currentPath, navigate }}>
@@ -51,9 +52,10 @@ export const Link: React.FC<{
   className?: string;
   children: React.ReactNode;
   ariaLabel?: string;
-  onClick?: () => void;
+  onClick?: React.MouseEventHandler<HTMLElement>;
   tabIndex?: number;
-}> = ({ href, className = '', children, ariaLabel, onClick, tabIndex }) => {
+  role?: string;
+}> = ({ href, className = '', children, ariaLabel, onClick, tabIndex, role }) => {
   const { navigate } = useRouter();
 
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -62,7 +64,7 @@ export const Link: React.FC<{
       return;
     }
     e.preventDefault();
-    if (onClick) onClick();
+    onClick?.(e as unknown as React.MouseEvent<HTMLElement>);
     navigate(href);
   };
 
@@ -73,6 +75,7 @@ export const Link: React.FC<{
       className={className}
       aria-label={ariaLabel}
       tabIndex={tabIndex}
+      role={role}
     >
       {children}
     </a>

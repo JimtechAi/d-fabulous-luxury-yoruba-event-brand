@@ -9,6 +9,31 @@ import { Container } from './Container';
 import { Link } from '../lib/router';
 import { Button } from './Button';
 import { BRAND_INFO, SERVICES_LIST } from '../data/brand';
+import { Facebook, Instagram, Music2 } from 'lucide-react';
+
+const SOCIAL_LINKS = [
+  {
+    name: 'Facebook',
+    href: 'https://www.facebook.com/share/1Gw84T9QFs/',
+    label: "D'Fabulous Facebook",
+    icon: Facebook,
+    className: 'border-[#1877F2] bg-[#1877F2] text-white hover:shadow-[0_0_14px_rgba(24,119,242,0.55)]',
+  },
+  {
+    name: 'TikTok',
+    href: 'https://www.tiktok.com/@dfabulousss',
+    label: "D'Fabulous TikTok",
+    icon: Music2,
+    className: 'border-[#25F4EE] bg-black text-white shadow-[3px_0_0_#FE2C55] hover:shadow-[0_0_14px_rgba(37,244,238,0.5),3px_0_0_#FE2C55]',
+  },
+  {
+    name: 'Instagram',
+    href: 'https://www.instagram.com/dfabulouss/',
+    label: "D'Fabulous Instagram",
+    icon: Instagram,
+    className: 'border-transparent bg-[linear-gradient(45deg,#FEDA75,#FA7E1E,#D62976,#962FBF,#4F5BD5)] text-white hover:shadow-[0_0_14px_rgba(214,41,118,0.5)]',
+  },
+] as const;
 
 export const Footer: React.FC = () => {
   return (
@@ -86,12 +111,12 @@ export const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/experience/gallery" className="hover:text-gold-luxury transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold-luxury">
+                <Link href="/gallery" className="hover:text-gold-luxury transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold-luxury">
                   Gallery
                 </Link>
               </li>
               <li>
-                <Link href="/experience/videos" className="hover:text-gold-luxury transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold-luxury">
+                <Link href="/gallery/videos" className="hover:text-gold-luxury transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold-luxury">
                   Cinematic Videos
                 </Link>
               </li>
@@ -121,19 +146,29 @@ export const Footer: React.FC = () => {
             <div className="space-y-3 text-xs text-champagne-soft/80 font-light">
               <div>
                 <span className="block text-[10px] text-gold-luxury/70 uppercase font-sans">Email Enquiries:</span>
-                <span className="font-mono text-[11px]">{BRAND_INFO.placeholders.email}</span>
+                <a href={BRAND_INFO.placeholders.emailUrl} className="font-mono text-[11px] hover:text-gold-luxury transition-colors">{BRAND_INFO.placeholders.email}</a>
               </div>
               <div>
                 <span className="block text-[10px] text-gold-luxury/70 uppercase font-sans">Direct Line:</span>
-                <span className="font-mono text-[11px]">{BRAND_INFO.placeholders.phone}</span>
+                <a href={BRAND_INFO.placeholders.phoneUrl} className="font-mono text-[11px] hover:text-gold-luxury transition-colors">{BRAND_INFO.placeholders.phone}</a>
+                <a href={BRAND_INFO.placeholders.whatsappUrl} target="_blank" rel="noopener noreferrer" className="block text-[11px] text-[#25D366] hover:text-[#7CFFAA] transition-colors">WhatsApp</a>
               </div>
 
               <div className="pt-2">
                 <span className="block text-[10px] text-gold-luxury/70 uppercase mb-2 font-sans">Social Channels:</span>
-                <div className="flex flex-col gap-1.5 font-sans text-xs text-champagne-soft/80">
-                  <span>Instagram: {BRAND_INFO.placeholders.instagram}</span>
-                  <span>YouTube: {BRAND_INFO.placeholders.youtube}</span>
-                  <span>TikTok: {BRAND_INFO.placeholders.tiktok}</span>
+                <div className="flex items-center gap-3 pt-1">
+                  {SOCIAL_LINKS.map(({ name, href, label, icon: Icon }) => (
+                    <a
+                      key={name}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-luxury focus-visible:ring-offset-2 focus-visible:ring-offset-black-rich ${SOCIAL_LINKS.find((social) => social.name === name)?.className}`}
+                    >
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    </a>
+                  ))}
                 </div>
               </div>
             </div>

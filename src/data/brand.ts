@@ -18,13 +18,16 @@ export const BRAND_INFO = {
     "International Distinction"
   ],
   placeholders: {
-    phone: "[CONTACT PHONE NUMBER TO BE SUPPLIED]",
-    email: "[OFFICIAL EMAIL ADDRESS TO BE SUPPLIED]",
-    address: "[UK HEADQUARTERS ADDRESS TO BE SUPPLIED]",
-    instagram: "[INSTAGRAM HANDLE TO BE SUPPLIED]",
-    youtube: "[YOUTUBE CHANNEL TO BE SUPPLIED]",
-    tiktok: "[TIKTOK HANDLE TO BE SUPPLIED]",
+    phone: "+44 7878 709883",
+    email: "Fabulousevents@hotmail.com",
+    address: "London, United Kingdom",
+    instagram: "@dfabulousuk",
+    youtube: "@dfabulousuk",
+    tiktok: "@dfabulousuk",
     bookingFormUrl: "/book",
+    emailUrl: "mailto:Fabulousevents@hotmail.com",
+    whatsappUrl: "https://wa.me/447878709883",
+    phoneUrl: "tel:+447878709883",
   }
 } as const;
 
@@ -118,16 +121,19 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     label: "Experience",
     href: "/experience",
     children: [
-      { label: "Gallery", href: "/experience/gallery", description: "High-resolution celebration photography" },
-      { label: "Videos", href: "/experience/videos", description: "Cinematic event highlights & ceremonial media" },
+      { label: "Gallery", href: "/gallery", description: "High-resolution celebration photography" },
       { label: "Testimonials", href: "/experience/testimonials", description: "Verified client reflections" },
       { label: "Awards", href: "/experience/awards", description: "Official honors and industry recognitions" },
       { label: "Destination Events", href: "/experience/destination-events", description: "International celebrations across Europe & worldwide" },
     ]
   },
   {
-    label: "Contact",
-    href: "/contact"
+    label: "Gallery",
+    href: "/gallery",
+    children: [
+      { label: "Gallery", href: "/gallery", description: "High-resolution celebration photography" },
+      { label: "Videos", href: "/gallery/videos", description: "Cinematic event highlights & ceremonial media" },
+    ]
   }
 ];
 
@@ -144,8 +150,8 @@ export const ALL_ROUTES = [
   { path: "/services/brand-influencing", title: "Cultural Brand Ambassador | D’Fabulous", desc: "Cultural consultancy, host representation, and luxury brand ambassadorship for high-profile African cultural galas and brand showcases." },
   { path: "/services/destination-events", title: "Destination Yoruba Events | D’Fabulous International", desc: "Bespoke Yoruba traditional wedding hosting and ceremonial leadership across Europe, North America, and international destination venues." },
   { path: "/experience", title: "The D’Fabulous Experience | Cultural Authority & Poise", desc: "Learn what defines the D’Fabulous experience: protocol command, visual elegance, audience engagement, and timeline precision." },
-  { path: "/experience/gallery", title: "Event Gallery | D’Fabulous Luxury Yoruba Events", desc: "Visual highlights capturing traditional engagement ceremonies, Alaga hosting, dowry presentations, and luxury wedding receptions." },
-  { path: "/experience/videos", title: "Cinematic Highlights | D’Fabulous Yoruba Events", desc: "Watch video highlights of live Alaga Iduro, Alaga Ijoko, and wedding MC hosting at luxury venues across the UK and internationally." },
+  { path: "/gallery", title: "Event Gallery | D’Fabulous Luxury Yoruba Events", desc: "Visual highlights capturing traditional engagement ceremonies, Alaga hosting, dowry presentations, and luxury wedding receptions." },
+  { path: "/gallery/videos", title: "Cinematic Highlights | D’Fabulous Yoruba Events", desc: "Watch video highlights of live Alaga Iduro, Alaga Ijoko, and wedding MC hosting at luxury venues across the UK and internationally." },
   { path: "/experience/testimonials", title: "Verified Testimonials | D’Fabulous Client Reflections", desc: "Read verified client reflections from couples, families, and wedding planners who experienced D’Fabulous ceremonial hosting." },
   { path: "/experience/awards", title: "Awards & Recognition | D’Fabulous Cultural Host", desc: "Official recognitions, industry honors, and media features celebrating excellence in Yoruba cultural hosting and event direction." },
   { path: "/experience/destination-events", title: "Destination Events | D’Fabulous International", desc: "Discover how D’Fabulous executes flawless Yoruba traditional engagement ceremonies across Europe and worldwide destinations." },

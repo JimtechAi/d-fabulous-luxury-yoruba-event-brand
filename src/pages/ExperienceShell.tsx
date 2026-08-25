@@ -53,19 +53,19 @@ export const ExperienceShell: React.FC = () => {
       {/* Overview Section */}
       <section className="py-16 sm:py-24 bg-ivory-warm">
         <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             
             <div className="lg:col-span-7 space-y-6">
-              <span className="inline-block px-3 py-1 text-xs font-semibold tracking-widest text-burgundy-rich uppercase bg-gold-light/20 rounded-full border border-gold-primary/30">
+              <span className="text-xs font-semibold tracking-[0.25em] text-gold-luxury uppercase block font-sans">
                 CEREMONIAL ARCHITECTURE
               </span>
-              <h2 className="text-3xl sm:text-4xl font-serif font-bold text-burgundy-rich leading-tight">
+              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-normal text-black-rich leading-tight">
                 Authentic Yoruba Traditions Delivered with Modern Elegance
               </h2>
-              <p className="text-neutral-700 leading-relaxed text-base sm:text-lg font-sans font-light">
-                A traditional Yoruba engagement (<em className="text-burgundy-rich font-medium">Igbeyawo</em>) is far more than a ceremony—it is the sacred union of two families, two ancestral heritage lines, and two communities.
+              <p className="text-charcoal-soft/85 leading-relaxed text-base sm:text-lg font-sans font-light">
+                A traditional Yoruba engagement (<em className="text-burgundy-deep font-medium">Igbeyawo</em>) is far more than a ceremony—it is the sacred union of two families, two ancestral heritage lines, and two communities.
               </p>
-              <p className="text-neutral-700 leading-relaxed text-base font-sans font-light">
+              <p className="text-charcoal-soft/85 leading-relaxed text-base font-sans font-light">
                 D’Fabulous brings decades of cultural fluency, authentic proverb delivery, and seamless event flow to ensure every traditional rite is executed with reverence, joy, and impeccable timing.
               </p>
 
@@ -79,31 +79,31 @@ export const ExperienceShell: React.FC = () => {
               </div>
             </div>
 
-            <div className="lg:col-span-5 bg-white p-8 rounded-2xl border border-gold-primary/20 shadow-md space-y-6">
-              <div className="flex items-center gap-3 text-burgundy-rich">
-                <ShieldCheck className="w-8 h-8 text-gold-primary shrink-0" />
-                <h3 className="text-xl font-serif font-bold">Cultural Pillars</h3>
+            <div className="lg:col-span-5 bg-ivory-warm p-8 border border-burgundy-deep/15 space-y-6">
+              <div className="flex items-center gap-3 text-burgundy-deep">
+                <ShieldCheck className="w-7 h-7 text-gold-luxury shrink-0" />
+                <h3 className="font-display text-xl font-normal">Cultural Pillars</h3>
               </div>
 
-              <ul className="space-y-4 text-sm text-neutral-700">
+              <ul className="space-y-4 text-sm text-charcoal-soft/85">
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-gold-dark shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-gold-luxury shrink-0 mt-0.5" />
                   <div>
-                    <strong className="text-burgundy-rich block">Proverbial Mastery:</strong>
-                    <span>Use of rich Yoruba proverbs (<em className="text-burgundy-rich">Owe Yoruba</em>) appropriate for marriage blessings.</span>
+                    <strong className="text-burgundy-deep block">Proverbial Mastery:</strong>
+                    <span>Use of rich Yoruba proverbs (<em className="text-burgundy-deep">Owe Yoruba</em>) appropriate for marriage blessings.</span>
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-gold-dark shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-gold-luxury shrink-0 mt-0.5" />
                   <div>
-                    <strong className="text-burgundy-rich block">Elders’ Protocol:</strong>
+                    <strong className="text-burgundy-deep block">Elders’ Protocol:</strong>
                     <span>Utmost deference to family patriarchs, matriarchs, and community chiefs.</span>
                   </div>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-gold-dark shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-gold-luxury shrink-0 mt-0.5" />
                   <div>
-                    <strong className="text-burgundy-rich block">Cross-Cultural Inclusivity:</strong>
+                    <strong className="text-burgundy-deep block">Cross-Cultural Inclusivity:</strong>
                     <span>Seamless English commentary ensuring non-Yoruba guests feel included.</span>
                   </div>
                 </li>
@@ -115,16 +115,16 @@ export const ExperienceShell: React.FC = () => {
       </section>
 
       {/* Rites Grid */}
-      <section className="py-16 sm:py-24 bg-white border-y border-neutral-200">
+      <section className="py-16 sm:py-24 bg-ivory-warm border-y border-burgundy-deep/10">
         <Container className="space-y-12">
           <div className="max-w-3xl mx-auto text-center space-y-4">
-            <span className="text-xs font-semibold tracking-widest text-gold-dark uppercase block">
+            <span className="text-xs font-semibold tracking-[0.25em] text-gold-luxury uppercase block font-sans">
               SACRED RITES
             </span>
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-burgundy-rich">
+            <h2 className="font-display text-3xl sm:text-4xl font-normal text-black-rich">
               Core Stages of the Yoruba Engagement
             </h2>
-            <p className="text-neutral-600 leading-relaxed text-base">
+            <p className="text-charcoal-soft/80 leading-relaxed text-base">
               D’Fabulous guides each phase of the traditional engagement with structured precision and joyful crowd engagement.
             </p>
           </div>
@@ -133,15 +133,15 @@ export const ExperienceShell: React.FC = () => {
             {culturalRites.map((rite, idx) => {
               const IconComponent = rite.icon;
               return (
-                <div key={idx} className="p-6 rounded-xl bg-ivory-warm border border-gold-primary/20 space-y-4 flex flex-col justify-between">
+                <div key={idx} className="group p-6 bg-ivory-warm border border-burgundy-deep/15 hover:border-gold-luxury/50 transition-colors duration-300 space-y-4 flex flex-col justify-between">
                   <div className="space-y-3">
-                    <div className="p-3 bg-burgundy-rich text-gold-primary rounded-lg w-fit">
+                    <div className="p-3 bg-burgundy-deep text-gold-luxury w-fit">
                       <IconComponent className="w-6 h-6" />
                     </div>
-                    <h3 className="font-serif font-bold text-burgundy-rich text-lg">
+                    <h3 className="font-display text-lg font-normal text-burgundy-deep">
                       {rite.title}
                     </h3>
-                    <p className="text-xs text-neutral-600 leading-relaxed">
+                    <p className="text-xs text-charcoal-soft/80 leading-relaxed">
                       {rite.desc}
                     </p>
                   </div>
@@ -153,14 +153,14 @@ export const ExperienceShell: React.FC = () => {
       </section>
 
       {/* Destination & Global Reach */}
-      <section className="py-16 sm:py-24 bg-burgundy-rich text-white">
+      <section className="py-16 sm:py-24 bg-burgundy-dark text-ivory-warm">
         <Container>
           <div className="max-w-3xl mx-auto text-center space-y-6">
-            <Globe className="w-12 h-12 text-gold-primary mx-auto" />
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-gold-primary">
+            <Globe className="w-10 h-10 text-gold-luxury mx-auto" />
+            <h2 className="font-display text-3xl sm:text-4xl font-normal text-ivory-warm">
               Global Destination Events
             </h2>
-            <p className="text-neutral-200 leading-relaxed text-base sm:text-lg">
+            <p className="text-champagne-soft/85 leading-relaxed text-base sm:text-lg">
               Whether hosting in a London luxury hotel, a historic château in France, a coastal venue in Nigeria, or a destination resort in Europe or North America, D’Fabulous provides international event hosting with complete cultural fidelity.
             </p>
             <div className="pt-4 flex flex-wrap justify-center gap-4">

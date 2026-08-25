@@ -11,8 +11,12 @@ export const SEO: React.FC<PageMetaProps> = ({
   title,
   description,
   canonicalUrl,
-  ogImage = '/images/og-default.jpg',
+  ogImage = '/assets/hero/hero1.webp',
   ogType = 'website',
+  schemaType,
+  schemaName,
+  schemaItems = [],
+  noindex = false,
 }) => {
   useEffect(() => {
     // 1. Document Title
@@ -33,6 +37,9 @@ export const SEO: React.FC<PageMetaProps> = ({
     // 2. Standard Meta Description
     setMetaTag('name', 'description', description);
 
+    // Robots directive: pages such as 404 should not be indexed even though they render normally.
+    setMetaTag('name', 'robots', noindex ? 'noindex, follow' : 'index, follow');
+
     // 3. Open Graph Tags
     setMetaTag('property', 'og:title', fullTitle);
     setMetaTag('property', 'og:description', description);
@@ -41,8 +48,14 @@ export const SEO: React.FC<PageMetaProps> = ({
     setMetaTag('property', 'og:site_name', BRAND_INFO.name);
 
     if (canonicalUrl || window.location.href) {
-      const url = canonicalUrl || window.location.href;
+      const url = canonicalUrl || `${window.location.origin}${window.location.pathname}`;
+      const absoluteOgImage = new URL(ogImage, window.location.origin).href;
       setMetaTag('property', 'og:url', url);
+      setMetaTag('property', 'og:image', absoluteOgImage);
+      setMetaTag('name', 'twitter:card', 'summary_large_image');
+      setMetaTag('name', 'twitter:title', fullTitle);
+      setMetaTag('name', 'twitter:description', description);
+      setMetaTag('name', 'twitter:image', absoluteOgImage);
 
       let canonicalLink = document.querySelector('link[rel="canonical"]');
       if (!canonicalLink) {
@@ -54,18 +67,47 @@ export const SEO: React.FC<PageMetaProps> = ({
     }
 
     // 4. Schema.org JSON-LD Structured Data
-    const schemaData = {
-      "@context": "https://schema.org",
-      "@type": "EventVenue",
+    const website = {
+      "@type": "WebSite",
+      "@id": `${window.location.origin}/#website`,
+      "name": BRAND_INFO.name,
+      "url": window.location.origin,
+      "publisher": { "@id": `${window.location.origin}/#organization` },
+    };
+
+    const organization = {
+      "@type": ["Organization", "ProfessionalService"],
+      "@id": `${window.location.origin}/#organization`,
       "name": BRAND_INFO.name,
       "description": BRAND_INFO.positioning,
-      "areaServed": "UK and International Destination",
+      "url": window.location.origin,
+      "email": BRAND_INFO.placeholders.email,
+      "telephone": BRAND_INFO.placeholders.phone,
+      "areaServed": ["United Kingdom", "Europe", "Nigeria", "International destinations"],
       "knowsLanguage": ["English", "Yoruba"],
-      "offers": {
-        "@type": "Offer",
-        "category": "Luxury Event Host & Cultural Ceremonies"
-      }
     };
+
+    const graph: Record<string, unknown>[] = [website, organization];
+    if (schemaType === 'service' && schemaName) {
+      graph.push({
+        "@type": "Service",
+        "name": schemaName,
+        "provider": { "@id": `${window.location.origin}/#organization` },
+        "areaServed": organization.areaServed,
+      });
+    }
+    if (schemaType === 'faq' && schemaItems.length > 0) {
+      graph.push({
+        "@type": "FAQPage",
+        "mainEntity": schemaItems.map((item) => ({
+          "@type": "Question",
+          "name": item.question,
+          "acceptedAnswer": { "@type": "Answer", "text": item.answer },
+        })),
+      });
+    }
+
+    const schemaData = { "@context": "https://schema.org", "@graph": graph };
 
     let scriptTag = document.querySelector('script[id="json-ld-schema"]');
     if (!scriptTag) {
@@ -76,7 +118,7 @@ export const SEO: React.FC<PageMetaProps> = ({
     }
     scriptTag.textContent = JSON.stringify(schemaData);
 
-  }, [title, description, canonicalUrl, ogImage, ogType]);
+  }, [title, description, canonicalUrl, ogImage, ogType, schemaType, schemaName, schemaItems, noindex]);
 
   return null;
 };

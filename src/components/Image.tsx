@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { ImageMediaProps } from '../types';
+import { getResponsiveImageProps } from '../lib/media';
 
 export const Image: React.FC<ImageMediaProps> = ({
   src,
@@ -44,8 +45,11 @@ export const Image: React.FC<ImageMediaProps> = ({
       ) : (
         <img
           src={src}
+          {...getResponsiveImageProps(src, '(max-width: 1024px) 100vw, 33vw')}
           alt={alt}
           loading={priority ? 'eager' : 'lazy'}
+          decoding={priority ? 'sync' : 'async'}
+          fetchPriority={priority ? 'high' : 'auto'}
           onError={() => setHasError(true)}
           className={`w-full h-full object-cover ${objectPosition} transition-transform duration-700 ease-out group-hover:scale-105`}
         />

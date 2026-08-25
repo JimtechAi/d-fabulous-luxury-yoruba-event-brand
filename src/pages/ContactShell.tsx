@@ -10,7 +10,31 @@ import { Button } from '../components/Button';
 import { SEO } from '../components/SEO';
 import { BRAND_INFO } from '../data/brand';
 import { submitMessage } from '../lib/db';
-import { Mail, Phone, MapPin, Send, CheckCircle2, AlertCircle, MessageSquare, Clock, Globe } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle2, AlertCircle, MessageSquare, Clock, Globe, Facebook, Instagram, Music2 } from 'lucide-react';
+
+const CONTACT_SOCIAL_LINKS = [
+  {
+    name: 'Facebook',
+    href: 'https://www.facebook.com/share/1Gw84T9QFs/',
+    label: "D'Fabulous Facebook",
+    icon: Facebook,
+    className: 'border-[#1877F2] bg-[#1877F2] text-white hover:shadow-[0_0_16px_rgba(24,119,242,0.55)]',
+  },
+  {
+    name: 'TikTok',
+    href: 'https://www.tiktok.com/@dfabulousss',
+    label: "D'Fabulous TikTok",
+    icon: Music2,
+    className: 'border-[#25F4EE] bg-black text-white shadow-[3px_0_0_#FE2C55] hover:shadow-[0_0_16px_rgba(37,244,238,0.5),3px_0_0_#FE2C55]',
+  },
+  {
+    name: 'Instagram',
+    href: 'https://www.instagram.com/dfabulouss/',
+    label: "D'Fabulous Instagram",
+    icon: Instagram,
+    className: 'border-transparent bg-[linear-gradient(45deg,#FEDA75,#FA7E1E,#D62976,#962FBF,#4F5BD5)] text-white hover:shadow-[0_0_16px_rgba(214,41,118,0.5)]',
+  },
+] as const;
 
 interface ContactFormData {
   fullName: string;
@@ -119,82 +143,101 @@ export const ContactShell: React.FC = () => {
         ]}
       />
 
-      <section className="py-16 md:py-24 bg-ivory-warm text-burgundy-rich">
+      <section className="py-16 md:py-24 bg-ivory-warm text-burgundy-deep">
         <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
             
             {/* Left Column: Official Contact Channels */}
             <div className="lg:col-span-5 space-y-8">
               <div>
-                <span className="inline-block px-3 py-1 mb-3 text-xs font-semibold tracking-widest text-burgundy-rich uppercase bg-gold-light/20 rounded-full border border-gold-primary/30">
+                <span className="text-xs font-semibold tracking-[0.25em] text-gold-luxury uppercase block mb-3 font-sans">
                   Global Booking Office
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-serif font-bold text-burgundy-rich">
+                <h2 className="font-display text-3xl sm:text-4xl font-normal text-black-rich">
                   Get in Touch
                 </h2>
-                <p className="mt-4 text-neutral-700 leading-relaxed">
+                <p className="mt-4 text-charcoal-soft/80 leading-relaxed">
                   Whether planning a traditional Yoruba engagement in London, a high-profile wedding reception, or an international destination celebration, we welcome your enquiry.
                 </p>
               </div>
 
-              <div className="space-y-6">
-                <div className="flex items-start gap-4 p-5 rounded-xl bg-white border border-gold-primary/20 shadow-sm">
-                  <div className="p-3 bg-burgundy-rich/10 text-burgundy-rich rounded-lg shrink-0">
+              <div className="space-y-4">
+                <div className="flex items-start gap-4 p-5 bg-ivory-warm border border-burgundy-deep/15 hover:border-gold-luxury/50 transition-colors duration-300">
+                  <div className="p-3 bg-burgundy-deep/10 text-burgundy-deep shrink-0">
                     <Mail className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-burgundy-rich text-sm uppercase tracking-wider">Official Email</h3>
-                    <p className="text-sm font-medium text-neutral-800 mt-1">{BRAND_INFO.placeholders.email}</p>
-                    <p className="text-xs text-neutral-500 mt-0.5">Response within 24–48 business hours</p>
+                    <h3 className="font-semibold text-burgundy-deep text-sm uppercase tracking-wider">Official Email</h3>
+                    <a href={BRAND_INFO.placeholders.emailUrl} className="block text-sm font-medium text-charcoal-soft mt-1 hover:text-burgundy-deep underline underline-offset-2">{BRAND_INFO.placeholders.email}</a>
+                    <p className="text-xs text-charcoal-soft/60 mt-0.5">Response within 24–48 business hours</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-5 rounded-xl bg-white border border-gold-primary/20 shadow-sm">
-                  <div className="p-3 bg-burgundy-rich/10 text-burgundy-rich rounded-lg shrink-0">
+                <div className="flex items-start gap-4 p-5 bg-ivory-warm border border-burgundy-deep/15 hover:border-gold-luxury/50 transition-colors duration-300">
+                  <div className="p-3 bg-burgundy-deep/10 text-burgundy-deep shrink-0">
                     <Phone className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-burgundy-rich text-sm uppercase tracking-wider">Telephone & WhatsApp</h3>
-                    <p className="text-sm font-medium text-neutral-800 mt-1">{BRAND_INFO.placeholders.phone}</p>
-                    <p className="text-xs text-neutral-500 mt-0.5">Available for scheduled consultations</p>
+                    <h3 className="font-semibold text-burgundy-deep text-sm uppercase tracking-wider">Telephone & WhatsApp</h3>
+                    <a href={BRAND_INFO.placeholders.phoneUrl} className="block text-sm font-medium text-charcoal-soft mt-1 hover:text-burgundy-deep underline underline-offset-2">{BRAND_INFO.placeholders.phone}</a>
+                    <a href={BRAND_INFO.placeholders.whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-block text-xs font-medium text-[#128C7E] mt-1 hover:text-[#075E54] underline underline-offset-2">Message on WhatsApp</a>
+                    <p className="text-xs text-charcoal-soft/60 mt-0.5">Available for scheduled consultations</p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-4 p-5 rounded-xl bg-white border border-gold-primary/20 shadow-sm">
-                  <div className="p-3 bg-burgundy-rich/10 text-burgundy-rich rounded-lg shrink-0">
+                <div className="flex items-start gap-4 p-5 bg-ivory-warm border border-burgundy-deep/15 hover:border-gold-luxury/50 transition-colors duration-300">
+                  <div className="p-3 bg-burgundy-deep/10 text-burgundy-deep shrink-0">
                     <MapPin className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-burgundy-rich text-sm uppercase tracking-wider">Headquarters & Reach</h3>
-                    <p className="text-sm font-medium text-neutral-800 mt-1">{BRAND_INFO.location}</p>
-                    <p className="text-xs text-neutral-500 mt-0.5">Serving London, Greater UK, Europe & Destination Worldwide</p>
+                    <h3 className="font-semibold text-burgundy-deep text-sm uppercase tracking-wider">Headquarters & Reach</h3>
+                    <p className="text-sm font-medium text-charcoal-soft mt-1">{BRAND_INFO.location}</p>
+                    <p className="text-xs text-charcoal-soft/60 mt-0.5">Serving London, Greater UK, Europe & Destination Worldwide</p>
                   </div>
                 </div>
               </div>
 
-              <div className="p-6 rounded-2xl bg-burgundy-rich text-white space-y-4">
-                <h4 className="font-serif font-semibold text-gold-primary text-lg flex items-center gap-2">
-                  <Globe className="w-5 h-5 text-gold-primary" />
+              <div className="p-6 border border-gold-luxury/30 bg-burgundy-deep text-ivory-warm space-y-4">
+                <h4 className="font-display text-lg font-normal text-gold-luxury flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-gold-luxury" />
                   Destination Event Inquiries
                 </h4>
-                <p className="text-sm text-neutral-200 leading-relaxed">
+                <p className="text-sm text-champagne-soft/85 leading-relaxed">
                   Planning an international celebration in Europe, Nigeria, or North America? Please specify your event location and travel dates in the inquiry form.
                 </p>
+              </div>
+
+              <div className="p-5 bg-ivory-warm border border-burgundy-deep/15">
+                <h3 className="font-semibold text-burgundy-deep text-sm uppercase tracking-wider">Follow D’Fabulous</h3>
+                <div className="mt-4 flex items-center gap-3">
+                  {CONTACT_SOCIAL_LINKS.map(({ name, href, label, icon: Icon }) => (
+                    <a
+                      key={name}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      className={`inline-flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-luxury focus-visible:ring-offset-2 focus-visible:ring-offset-white ${CONTACT_SOCIAL_LINKS.find((social) => social.name === name)?.className}`}
+                    >
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    </a>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* Right Column: Contact Form */}
-            <div className="lg:col-span-7 bg-white p-8 sm:p-10 rounded-2xl border border-gold-primary/20 shadow-lg">
+            <div className="lg:col-span-7 bg-ivory-warm p-8 sm:p-10 border border-burgundy-deep/15">
               {status === 'success' ? (
                 <div className="text-center py-12 space-y-6">
                   <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
                     <CheckCircle2 className="w-10 h-10" />
                   </div>
-                  <h3 className="text-2xl font-serif font-bold text-burgundy-rich">
+                  <h3 className="font-display text-2xl font-normal text-burgundy-deep">
                     Consultation Request Submitted
                   </h3>
-                  <p className="text-neutral-700 max-w-md mx-auto leading-relaxed">
-                    Thank you, <strong className="text-burgundy-rich">{formData.fullName}</strong>. Your message has been received. D’Fabulous team will respond within 24–48 business hours.
+                  <p className="text-charcoal-soft/80 max-w-md mx-auto leading-relaxed">
+                    Thank you, <strong className="text-burgundy-deep">{formData.fullName}</strong>. Your message has been received. D’Fabulous team will respond within 24–48 business hours.
                   </p>
 
                   <div className="pt-4">
@@ -232,12 +275,12 @@ export const ContactShell: React.FC = () => {
                     />
                   </div>
 
-                  <h3 className="text-xl font-serif font-bold text-burgundy-rich border-b border-neutral-200 pb-3">
+                  <h3 className="text-xl font-display font-normal text-burgundy-deep border-b border-burgundy-deep/15 pb-3">
                     Send a Direct Message
                   </h3>
 
                   {status === 'error' && (
-                    <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-3 text-sm">
+                    <div role="alert" className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center gap-3 text-sm">
                       <AlertCircle className="w-5 h-5 shrink-0 text-red-500" />
                       <span>{errorMessage}</span>
                     </div>
@@ -252,6 +295,8 @@ export const ContactShell: React.FC = () => {
                       <input
                         type="text"
                         id="contact_fullName"
+                        aria-invalid={Boolean(errors.fullName)}
+                        aria-describedby={errors.fullName ? 'contact_fullName-error' : undefined}
                         value={formData.fullName}
                         onChange={(e) => {
                           setFormData({ ...formData, fullName: e.target.value });
@@ -262,7 +307,7 @@ export const ContactShell: React.FC = () => {
                         }`}
                         placeholder="Your full name"
                       />
-                      {errors.fullName && <p className="mt-1 text-xs text-red-500">{errors.fullName}</p>}
+                      {errors.fullName && <p id="contact_fullName-error" className="mt-1 text-xs text-red-500">{errors.fullName}</p>}
                     </div>
 
                     {/* Email */}
@@ -273,6 +318,8 @@ export const ContactShell: React.FC = () => {
                       <input
                         type="email"
                         id="contact_email"
+                        aria-invalid={Boolean(errors.email)}
+                        aria-describedby={errors.email ? 'contact_email-error' : undefined}
                         value={formData.email}
                         onChange={(e) => {
                           setFormData({ ...formData, email: e.target.value });
@@ -283,7 +330,7 @@ export const ContactShell: React.FC = () => {
                         }`}
                         placeholder="email@domain.com"
                       />
-                      {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
+                      {errors.email && <p id="contact_email-error" className="mt-1 text-xs text-red-500">{errors.email}</p>}
                     </div>
                   </div>
 
@@ -296,6 +343,8 @@ export const ContactShell: React.FC = () => {
                       <input
                         type="tel"
                         id="contact_phone"
+                        aria-invalid={Boolean(errors.phone)}
+                        aria-describedby={errors.phone ? 'contact_phone-error' : undefined}
                         value={formData.phone}
                         onChange={(e) => {
                           setFormData({ ...formData, phone: e.target.value });
@@ -306,7 +355,7 @@ export const ContactShell: React.FC = () => {
                         }`}
                         placeholder="+44 7123 456789"
                       />
-                      {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
+                      {errors.phone && <p id="contact_phone-error" className="mt-1 text-xs text-red-500">{errors.phone}</p>}
                     </div>
 
                     {/* Inquiry Type */}
@@ -336,6 +385,8 @@ export const ContactShell: React.FC = () => {
                     </label>
                     <textarea
                       id="contact_message"
+                      aria-invalid={Boolean(errors.message)}
+                      aria-describedby={errors.message ? 'contact_message-error' : undefined}
                       rows={5}
                       value={formData.message}
                       onChange={(e) => {
@@ -347,7 +398,7 @@ export const ContactShell: React.FC = () => {
                       }`}
                       placeholder="Please share details regarding proposed dates, location, guest expectations, or specific questions..."
                     />
-                    {errors.message && <p className="mt-1 text-xs text-red-500">{errors.message}</p>}
+                    {errors.message && <p id="contact_message-error" className="mt-1 text-xs text-red-500">{errors.message}</p>}
                   </div>
 
                   <div className="pt-2">

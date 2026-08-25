@@ -40,8 +40,12 @@ export const Button: React.FC<ButtonProps> = ({
       'bg-transparent text-burgundy-deep border-burgundy-deep hover:bg-burgundy-deep hover:text-ivory-warm active:scale-[0.99]',
     text:
       'bg-transparent text-burgundy-deep border-transparent hover:text-gold-luxury p-0 min-h-0 min-w-0 font-semibold tracking-wider group',
+    outline:
+      'bg-transparent text-burgundy-deep border-burgundy-deep hover:bg-burgundy-deep hover:text-ivory-warm active:scale-[0.99]',
     'outline-light':
       'bg-transparent text-ivory-warm border-champagne-soft/40 hover:border-gold-luxury hover:text-gold-luxury hover:bg-black-rich/30 active:scale-[0.99]',
+    danger:
+      'bg-red-700 text-white border-red-700 hover:bg-red-800 active:scale-[0.99]',
   };
 
   const combinedClasses = `${baseStyles} ${variant === 'text' ? '' : sizeStyles[size]} ${variantStyles[variant]} ${className}`;
@@ -64,7 +68,11 @@ export const Button: React.FC<ButtonProps> = ({
 
   if (href && !disabled) {
     return (
-      <Link href={href} className={combinedClasses} onClick={onClick}>
+      <Link
+        href={href}
+        className={combinedClasses}
+        onClick={onClick as unknown as React.MouseEventHandler<HTMLElement>}
+      >
         {content}
       </Link>
     );

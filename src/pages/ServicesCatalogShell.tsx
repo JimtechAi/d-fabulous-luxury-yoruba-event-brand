@@ -52,14 +52,14 @@ export const ServicesCatalogShell: React.FC = () => {
           {/* Section 1: Core Alaga & MC Hosting */}
           <div>
             <div className="flex items-center gap-3 mb-8">
-              <div className="p-2.5 bg-burgundy-rich text-gold-primary rounded-lg">
+              <div className="p-2.5 bg-burgundy-deep text-gold-luxury">
                 <Crown className="w-6 h-6" />
               </div>
               <div>
-                <span className="text-xs font-semibold tracking-widest text-gold-dark uppercase block">
+                <span className="text-xs font-semibold tracking-[0.2em] text-gold-luxury uppercase block font-sans">
                   PRIMARY CEREMONIAL ROLES
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-serif font-bold text-burgundy-rich">
+                <h2 className="font-display text-2xl sm:text-3xl font-normal text-black-rich">
                   Core Alaga & Master of Ceremonies
                 </h2>
               </div>
@@ -75,14 +75,14 @@ export const ServicesCatalogShell: React.FC = () => {
           {/* Section 2: Specialist Traditional Direction */}
           <div>
             <div className="flex items-center gap-3 mb-8">
-              <div className="p-2.5 bg-burgundy-rich text-gold-primary rounded-lg">
+              <div className="p-2.5 bg-burgundy-deep text-gold-luxury">
                 <Sparkles className="w-6 h-6" />
               </div>
               <div>
-                <span className="text-xs font-semibold tracking-widest text-gold-dark uppercase block">
+                <span className="text-xs font-semibold tracking-[0.2em] text-gold-luxury uppercase block font-sans">
                   SPECIALIST PROTOCOL & STYLING
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-serif font-bold text-burgundy-rich">
+                <h2 className="font-display text-2xl sm:text-3xl font-normal text-black-rich">
                   Traditional Direction & Gift Presentation
                 </h2>
               </div>
@@ -98,14 +98,14 @@ export const ServicesCatalogShell: React.FC = () => {
           {/* Section 3: Brand Partnerships & Cultural Ambassadorship */}
           <div>
             <div className="flex items-center gap-3 mb-8">
-              <div className="p-2.5 bg-burgundy-rich text-gold-primary rounded-lg">
+              <div className="p-2.5 bg-burgundy-deep text-gold-luxury">
                 <Globe className="w-6 h-6" />
               </div>
               <div>
-                <span className="text-xs font-semibold tracking-widest text-gold-dark uppercase block">
+                <span className="text-xs font-semibold tracking-[0.2em] text-gold-luxury uppercase block font-sans">
                   CORPORATE & BRAND PARTNERSHIPS
                 </span>
-                <h2 className="text-2xl sm:text-3xl font-serif font-bold text-burgundy-rich">
+                <h2 className="font-display text-2xl sm:text-3xl font-normal text-black-rich">
                   Cultural Ambassadorship
                 </h2>
               </div>
@@ -119,11 +119,11 @@ export const ServicesCatalogShell: React.FC = () => {
           </div>
 
           {/* Final CTA Banner */}
-          <div className="p-8 sm:p-12 rounded-2xl bg-burgundy-rich text-white text-center space-y-6">
-            <h3 className="font-serif text-3xl font-bold text-gold-primary">
+          <div className="p-8 sm:p-12 border border-gold-luxury/30 bg-burgundy-deep text-ivory-warm text-center space-y-6">
+            <h3 className="font-display text-2xl sm:text-3xl font-normal text-gold-luxury">
               Require a Custom Event Hosting Package?
             </h3>
-            <p className="text-neutral-200 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-champagne-soft/85 max-w-2xl mx-auto leading-relaxed">
               We frequently combine Alaga Iduro, Alaga Ijoko, and Reception MC hosting into a unified seamless experience for couples and families.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2">

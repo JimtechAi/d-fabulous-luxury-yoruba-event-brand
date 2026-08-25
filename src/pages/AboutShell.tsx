@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { Container } from '../components/Container';
+import { getResponsiveImageProps } from '../lib/media';
 import { PageHero } from '../components/PageHero';
 import { Button } from '../components/Button';
 import { SEO } from '../components/SEO';
@@ -31,47 +32,47 @@ export const AboutShell: React.FC = () => {
       {/* Main Narrative Section */}
       <section className="py-16 sm:py-24 bg-ivory-warm">
         <Container>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             
             {/* Left Column: Brand Story */}
             <div className="lg:col-span-7 space-y-6">
-              <span className="inline-block px-3 py-1 text-xs font-semibold tracking-widest text-burgundy-rich uppercase bg-gold-light/20 rounded-full border border-gold-primary/30">
+              <span className="text-xs font-semibold tracking-[0.25em] text-gold-luxury uppercase block font-sans">
                 THE D’FABULOUS HERITAGE
               </span>
-              <h2 className="text-3xl sm:text-4xl font-serif font-bold text-burgundy-rich leading-tight">
+              <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-normal text-black-rich leading-tight">
                 Meet Precious Adams
               </h2>
-              <p className="text-neutral-700 leading-relaxed text-base sm:text-lg font-sans font-light">
+              <p className="text-charcoal-soft/85 leading-relaxed text-base sm:text-lg font-sans font-light">
                 The person behind D’Fabulous Luxury Yoruba Events.
               </p>
-              <h3 className="text-2xl sm:text-3xl font-serif font-bold text-burgundy-rich leading-tight">
+              <h3 className="font-display text-xl sm:text-2xl font-normal text-burgundy-deep leading-snug">
                 Honouring Yoruba Heritage with Modern Poise & Precision
               </h3>
-              <p className="text-neutral-800 leading-relaxed text-base sm:text-lg font-sans font-light">
-                D’Fabulous represents the pinnacle of Yoruba ceremonial hosting. We preserve the sacred dignity of traditional Yoruba engagements—the <em className="text-burgundy-rich font-medium">Igbeyawo</em>—while elevating event direction with contemporary poise, structured timeline management, and regal stage presence.
+              <p className="text-charcoal-soft/85 leading-relaxed text-base sm:text-lg font-sans font-light">
+                D’Fabulous represents the pinnacle of Yoruba ceremonial hosting. We preserve the sacred dignity of traditional Yoruba engagements—the <em className="text-burgundy-deep font-medium">Igbeyawo</em>—while elevating event direction with contemporary poise, structured timeline management, and regal stage presence.
               </p>
-              <p className="text-neutral-800 leading-relaxed text-base font-sans font-light">
+              <p className="text-charcoal-soft/80 leading-relaxed text-base font-sans font-light">
                 Grounded in deep respect for family elders, ancestral protocols, and Yoruba linguistic artistry, D’Fabulous serves as a trusted bridge between families, generations, and cultures during milestone marital celebrations across the United Kingdom, Europe, Nigeria, and worldwide destination venues.
               </p>
 
               <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 bg-white rounded-xl border border-gold-primary/20 shadow-sm flex items-start gap-3">
-                  <div className="p-2 bg-burgundy-rich/10 text-burgundy-rich rounded-lg shrink-0">
+                <div className="p-4 bg-ivory-warm border border-burgundy-deep/15 hover:border-gold-luxury/50 transition-colors duration-300 flex items-start gap-3">
+                  <div className="p-2 bg-burgundy-deep/10 text-burgundy-deep shrink-0">
                     <Crown className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-serif font-bold text-burgundy-rich text-sm">Bilingual Oratory</h4>
-                    <p className="text-xs text-neutral-700 mt-1">Fluent Yoruba proverbs & polished English hosting</p>
+                    <h4 className="font-display text-base font-normal text-burgundy-deep">Bilingual Oratory</h4>
+                    <p className="text-xs text-charcoal-soft/80 mt-1">Fluent Yoruba proverbs & polished English hosting</p>
                   </div>
                 </div>
 
-                <div className="p-4 bg-white rounded-xl border border-gold-primary/20 shadow-sm flex items-start gap-3">
-                  <div className="p-2 bg-burgundy-rich/10 text-burgundy-rich rounded-lg shrink-0">
+                <div className="p-4 bg-ivory-warm border border-burgundy-deep/15 hover:border-gold-luxury/50 transition-colors duration-300 flex items-start gap-3">
+                  <div className="p-2 bg-burgundy-deep/10 text-burgundy-deep shrink-0">
                     <Globe className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="font-serif font-bold text-burgundy-rich text-sm">Global Capability</h4>
-                    <p className="text-xs text-neutral-700 mt-1">UK headquarters with worldwide destination experience</p>
+                    <h4 className="font-display text-base font-normal text-burgundy-deep">Global Capability</h4>
+                    <p className="text-xs text-charcoal-soft/80 mt-1">UK headquarters with worldwide destination experience</p>
                   </div>
                 </div>
               </div>
@@ -79,36 +80,40 @@ export const AboutShell: React.FC = () => {
 
             {/* Right Column: Portrait + Values Highlight Card */}
             <div className="lg:col-span-5 space-y-6">
-              <div className="overflow-hidden rounded-2xl border border-gold-primary/30 bg-white shadow-xl">
-                <div className="relative aspect-[4/5] bg-neutral-200">
+              <div className="overflow-hidden border border-burgundy-deep/15 bg-ivory-warm">
+                <div className="relative aspect-[4/5] bg-burgundy-dark/10">
                   <img
                     src="/assets/about/about.webp.jpeg"
+                    {...getResponsiveImageProps('/assets/about/about.webp.jpeg', '(max-width: 1024px) 100vw, 42vw')}
                     alt="Precious Adams, the person behind D’Fabulous Luxury Yoruba Events"
-                    className="h-full w-full object-cover object-center"
+                    loading="eager"
+                    decoding="sync"
+                    fetchPriority="high"
+                    className="h-full w-full object-cover object-top"
                   />
                 </div>
               </div>
 
-              <div className="bg-burgundy-rich text-white p-8 sm:p-10 rounded-2xl border border-gold-primary/30 shadow-xl space-y-6">
-                <h3 className="text-2xl font-serif font-bold text-neutral-900">
+              <div className="bg-burgundy-deep text-ivory-warm p-8 sm:p-10 border border-gold-luxury/30 space-y-6">
+                <h3 className="font-display text-2xl font-normal text-ivory-warm">
                   Our Core Pillars
                 </h3>
-                <p className="text-neutral-800 text-sm leading-relaxed">
+                <p className="text-champagne-soft/90 text-sm leading-relaxed">
                   Every event guided by D’Fabulous is anchored by five unyielding commitments:
                 </p>
 
                 <ul className="space-y-4 text-sm">
                   {BRAND_INFO.values.map((val, idx) => (
                     <li key={idx} className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-full bg-gold-primary/20 text-gold-primary flex items-center justify-center font-mono text-xs font-bold shrink-0">
+                      <div className="w-6 h-6 bg-gold-luxury/20 text-gold-luxury flex items-center justify-center font-mono text-xs font-bold shrink-0">
                         {idx + 1}
                       </div>
-                      <span className="font-medium text-neutral-900">{val}</span>
+                      <span className="font-medium text-ivory-warm">{val}</span>
                     </li>
                   ))}
                 </ul>
 
-                <div className="pt-4 border-t border-gold-primary/20">
+                <div className="pt-4 border-t border-gold-luxury/20">
                   <Button variant="primary" href="/book" className="w-full justify-center">
                     RESERVE YOUR EVENT DATE
                   </Button>
@@ -121,42 +126,42 @@ export const AboutShell: React.FC = () => {
       </section>
 
       {/* Distinction Section: Alaga Iduro vs Alaga Ijoko Mastery */}
-      <section className="py-16 sm:py-24 bg-white border-y border-neutral-200">
+      <section className="py-16 sm:py-24 bg-ivory-warm border-y border-burgundy-deep/10">
         <Container className="space-y-12">
           <div className="max-w-3xl mx-auto text-center space-y-4">
-            <span className="text-xs font-semibold tracking-widest text-gold-dark uppercase block">
+            <span className="text-xs font-semibold tracking-[0.25em] text-gold-luxury uppercase block font-sans">
               CEREMONIAL MASTERY
             </span>
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-burgundy-rich">
+            <h2 className="font-display text-3xl sm:text-4xl font-normal text-black-rich">
               The Dual Alaga Roles Explained
             </h2>
-            <p className="text-neutral-700 leading-relaxed text-base">
+            <p className="text-charcoal-soft/80 leading-relaxed text-base">
               In traditional Yoruba engagement ceremonies, two distinct spokespersons lead the proceedings to represent both families with respect, humor, and cultural honor.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="p-8 rounded-2xl bg-ivory-warm border border-gold-primary/20 space-y-4 shadow-sm">
-              <div className="inline-block p-3 bg-burgundy-rich text-gold-primary rounded-xl">
+            <div className="p-8 bg-ivory-warm border border-burgundy-deep/15 hover:border-gold-luxury/50 transition-colors duration-300 space-y-4">
+              <div className="inline-flex p-3 bg-burgundy-deep text-gold-luxury">
                 <Users className="w-6 h-6" />
               </div>
-              <h3 className="text-2xl font-serif font-bold text-burgundy-rich">
+              <h3 className="font-display text-xl sm:text-2xl font-normal text-burgundy-deep">
                 Alaga Iduro (Groom’s Representative)
               </h3>
-              <p className="text-neutral-800 text-sm leading-relaxed">
-                As Alaga Iduro, D’Fabulous serves as the official spokesperson for the groom’s family. We lead the delegation with respectful greetings (<em className="text-burgundy-rich font-medium">Oriba</em>), articulate the groom’s noble intentions, present formal proposal letters, and guide prostration rituals with humility and dignity.
+              <p className="text-charcoal-soft/85 text-sm leading-relaxed">
+                As Alaga Iduro, D’Fabulous serves as the official spokesperson for the groom’s family. We lead the delegation with respectful greetings (<em className="text-burgundy-deep font-medium">Oriba</em>), articulate the groom’s noble intentions, present formal proposal letters, and guide prostration rituals with humility and dignity.
               </p>
             </div>
 
-            <div className="p-8 rounded-2xl bg-ivory-warm border border-gold-primary/20 space-y-4 shadow-sm">
-              <div className="inline-block p-3 bg-burgundy-rich text-gold-primary rounded-xl">
+            <div className="p-8 bg-ivory-warm border border-burgundy-deep/15 hover:border-gold-luxury/50 transition-colors duration-300 space-y-4">
+              <div className="inline-flex p-3 bg-burgundy-deep text-gold-luxury">
                 <Crown className="w-6 h-6" />
               </div>
-              <h3 className="text-2xl font-serif font-bold text-burgundy-rich">
+              <h3 className="font-display text-xl sm:text-2xl font-normal text-burgundy-deep">
                 Alaga Ijoko (Bride’s Host & Custodian)
               </h3>
-              <p className="text-neutral-800 text-sm leading-relaxed">
-                As Alaga Ijoko, D’Fabulous acts as the official custodian and host for the bride’s family. We welcome the groom’s delegation, oversee dowry item inspections (<em className="text-burgundy-rich font-medium">Eru Iyawo</em>), coordinate the bride’s royal entrance, and facilitate ancestral family blessings.
+              <p className="text-charcoal-soft/85 text-sm leading-relaxed">
+                As Alaga Ijoko, D’Fabulous acts as the official custodian and host for the bride’s family. We welcome the groom’s delegation, oversee dowry item inspections (<em className="text-burgundy-deep font-medium">Eru Iyawo</em>), coordinate the bride’s royal entrance, and facilitate ancestral family blessings.
               </p>
             </div>
           </div>
@@ -166,11 +171,11 @@ export const AboutShell: React.FC = () => {
       {/* CTA Section */}
       <section className="py-16 bg-ivory-warm">
         <Container>
-          <div className="p-8 sm:p-12 rounded-2xl bg-burgundy-rich text-white text-center space-y-6 shadow-xl">
-            <h3 className="font-serif text-3xl font-bold text-neutral-900">
+          <div className="p-8 sm:p-12 border border-gold-luxury/30 bg-burgundy-deep text-ivory-warm text-center space-y-6">
+            <h3 className="font-display text-2xl sm:text-3xl font-normal text-ivory-warm">
               Begin Your Cultural Celebration Journey
             </h3>
-            <p className="text-neutral-800 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-champagne-soft/90 max-w-2xl mx-auto leading-relaxed">
               Consult with our booking office to discuss your event dates, venue location, and customized Yoruba engagement hosting requirements.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2">

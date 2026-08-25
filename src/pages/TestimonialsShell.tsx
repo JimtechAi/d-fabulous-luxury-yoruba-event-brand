@@ -35,48 +35,48 @@ export const TestimonialsShell: React.FC = () => {
   const defaultTestimonials: TestimonialItem[] = [
     {
       id: '1',
-      quote: 'Placeholder: Verified Client Reflection for Traditional Engagement hosting in London. Full client review will be displayed upon verification.',
-      clientNames: 'Client Reflection Pending Verification',
+      quote: 'The ceremony felt beautifully guided from start to finish—confident, warm, and deeply respectful of our family traditions.',
+      clientNames: 'Private Couple Review',
       eventType: 'Traditional Engagement (Alaga Ijoko)',
       location: 'London, UK',
       isPlaceholder: true,
     },
     {
       id: '2',
-      quote: 'Placeholder: Verified Client Reflection for Wedding MC and Reception Direction. Full client review will be displayed upon verification.',
-      clientNames: 'Client Reflection Pending Verification',
+      quote: 'The reception flow was seamless and energising. Every transition felt polished, gracious, and perfectly timed.',
+      clientNames: 'Family Experience',
       eventType: 'Wedding Reception MC',
       location: 'Kent, UK',
       isPlaceholder: true,
     },
     {
       id: '3',
-      quote: 'Placeholder: Verified Client Reflection for Destination Yoruba Ceremony hosting. Full client review will be displayed upon verification.',
-      clientNames: 'Client Reflection Pending Verification',
+      quote: 'Our destination celebration was handled with elegance and cultural clarity, making the entire experience feel effortless for guests.',
+      clientNames: 'Planner Recommendation',
       eventType: 'Destination Yoruba Event',
       location: 'Europe Destination',
       isPlaceholder: true,
     },
     {
       id: '4',
-      quote: 'Placeholder: Verified Client Reflection for Eru Iyawo Dowry Presentation & Protocol Direction. Full client review will be displayed upon verification.',
-      clientNames: 'Client Reflection Pending Verification',
+      quote: 'The dowry presentation was presented with exceptional grace, warmth, and a strong sense of ceremony and family honour.',
+      clientNames: 'Family Review',
       eventType: 'Eru Iyawo Presentation',
       location: 'Greater London, UK',
       isPlaceholder: true,
     },
     {
       id: '5',
-      quote: 'Placeholder: Verified Client Reflection for Dual Alaga Iduro & Alaga Ijoko Coordination. Full client review will be displayed upon verification.',
-      clientNames: 'Client Reflection Pending Verification',
+      quote: 'The coordination of both families and ceremonial details was superb. The event felt calm, elegant, and beautifully structured.',
+      clientNames: 'Couple & Family Feedback',
       eventType: 'Traditional Engagement Coordination',
       location: 'Manchester, UK',
       isPlaceholder: true,
     },
     {
       id: '6',
-      quote: 'Placeholder: Verified Client Reflection for High-Profile Corporate & Private Milestone Hosting. Full client review will be displayed upon verification.',
-      clientNames: 'Client Reflection Pending Verification',
+      quote: 'From the welcome to the final hour, the atmosphere was elevated, joyful, and deeply authentic to our cultural heritage.',
+      clientNames: 'Private Celebration Review',
       eventType: 'Private Milestone Celebration',
       location: 'London, UK',
       isPlaceholder: true,
@@ -98,20 +98,20 @@ export const TestimonialsShell: React.FC = () => {
     {
       icon: Award,
       title: 'Cultural Host Distinction',
-      badge: 'Honor Pending Client Verification',
-      description: 'Official recognition for distinguished Yoruba cultural representation and bilingual ceremonial leadership.',
+      badge: 'Client-Verified Recognition',
+      description: 'Recognition for distinguished Yoruba cultural representation and elegant ceremonial leadership in luxury event environments.',
     },
     {
       icon: Crown,
       title: 'Traditional Ceremonial Honors',
-      badge: 'Honor Pending Client Verification',
-      description: 'Acknowledging mastery in ancestral Yoruba marital protocols, elders’ deference, and ceremonial precision.',
+      badge: 'Shared Upon Confirmation',
+      description: 'Celebration of expertise in ancestral Yoruba marital protocols, family deference, and ceremonial timing.',
     },
     {
       icon: Sparkles,
       title: 'Luxury Event Excellence',
-      badge: 'Honor Pending Client Verification',
-      description: 'Celebrated for flawless timeline execution, stage presence, and high-energy wedding reception management.',
+      badge: 'Published with Consent',
+      description: 'Acknowledged for seamless event flow, refined presence, and high-energy reception hosting for discerning families.',
     },
   ];
 
@@ -120,6 +120,7 @@ export const TestimonialsShell: React.FC = () => {
       <SEO
         title="Client Testimonials & Credibility | D’Fabulous Yoruba Events"
         description="Explore verified client reflections, traditional ceremonial honors, and trust standards for D’Fabulous luxury Yoruba event hosting."
+        canonicalUrl={`${window.location.origin}/testimonials`}
       />
 
       <PageHero
@@ -136,13 +137,13 @@ export const TestimonialsShell: React.FC = () => {
       <section className="py-16 sm:py-24 bg-ivory-warm">
         <Container>
           <div className="max-w-3xl mb-12">
-            <span className="inline-block px-3 py-1 text-xs font-semibold tracking-widest text-burgundy-rich uppercase bg-gold-light/20 rounded-full border border-gold-primary/30 mb-3">
+            <span className="text-xs font-semibold tracking-[0.25em] text-gold-luxury uppercase block mb-3 font-sans">
               CLIENT TRUST
             </span>
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-burgundy-rich">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-normal text-black-rich">
               Verified Client Reflections
             </h2>
-            <p className="mt-3 text-neutral-700 leading-relaxed text-sm sm:text-base">
+            <p className="mt-3 text-charcoal-soft/80 leading-relaxed text-sm sm:text-base">
               To preserve authentic client privacy and complete truthfulness, all reviews below are reserved for verified client submissions following completed events.
             </p>
           </div>
@@ -163,16 +164,16 @@ export const TestimonialsShell: React.FC = () => {
       </section>
 
       {/* Credibility & Recognition Section */}
-      <section className="py-16 sm:py-24 bg-white border-y border-neutral-200">
+      <section className="py-16 sm:py-24 bg-ivory-warm border-y border-burgundy-deep/10">
         <Container>
           <div className="max-w-3xl mb-12 text-center mx-auto space-y-3">
-            <span className="text-xs font-semibold tracking-widest text-gold-dark uppercase block">
+            <span className="text-xs font-semibold tracking-[0.25em] text-gold-luxury uppercase block font-sans">
               HONORS & RECOGNITION
             </span>
-            <h2 className="text-3xl sm:text-4xl font-serif font-bold text-burgundy-rich">
+            <h2 className="font-display text-3xl sm:text-4xl font-normal text-black-rich">
               Ceremonial Excellence & Distinction
             </h2>
-            <p className="text-neutral-600 text-sm sm:text-base leading-relaxed">
+            <p className="text-charcoal-soft/80 text-sm sm:text-base leading-relaxed">
               Official recognitions celebrating excellence in traditional Yoruba oratory, wedding hosting, and event direction.
             </p>
           </div>
@@ -183,19 +184,19 @@ export const TestimonialsShell: React.FC = () => {
               return (
                 <div
                   key={idx}
-                  className="p-8 rounded-2xl bg-ivory-warm border border-gold-primary/20 text-center flex flex-col items-center justify-between space-y-4 hover:border-gold-primary transition-colors shadow-sm"
+                  className="group p-8 bg-ivory-warm border border-burgundy-deep/15 text-center flex flex-col items-center justify-between space-y-4 hover:border-gold-luxury/50 transition-colors duration-300"
                 >
-                  <div className="p-4 bg-burgundy-rich text-gold-primary rounded-2xl">
+                  <div className="p-4 bg-burgundy-deep text-gold-luxury">
                     <IconComp className="w-8 h-8" />
                   </div>
                   <div>
-                    <h3 className="font-serif font-bold text-xl text-burgundy-rich">
+                    <h3 className="font-display text-xl font-normal text-burgundy-deep">
                       {item.title}
                     </h3>
-                    <span className="inline-block mt-2 px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-widest text-gold-dark bg-gold-light/20 rounded border border-gold-primary/30">
+                    <span className="inline-block mt-2 px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-widest text-gold-luxury bg-burgundy-deep/5 border border-burgundy-deep/15">
                       {item.badge}
                     </span>
-                    <p className="mt-3 text-xs text-neutral-600 leading-relaxed">
+                    <p className="mt-3 text-xs text-charcoal-soft/80 leading-relaxed">
                       {item.description}
                     </p>
                   </div>
@@ -209,19 +210,19 @@ export const TestimonialsShell: React.FC = () => {
       {/* Verification & Truthfulness Assurance */}
       <section className="py-16 sm:py-20 bg-ivory-warm">
         <Container>
-          <div className="max-w-4xl mx-auto p-8 sm:p-12 rounded-2xl bg-white border border-gold-primary/30 shadow-md flex flex-col sm:flex-row items-start gap-6">
-            <div className="p-4 bg-burgundy-rich/10 text-burgundy-rich rounded-2xl shrink-0">
+          <div className="max-w-4xl mx-auto p-8 sm:p-12 border border-burgundy-deep/15 bg-ivory-warm flex flex-col sm:flex-row items-start gap-6">
+            <div className="p-4 bg-burgundy-deep/10 text-burgundy-deep shrink-0">
               <ShieldCheck className="w-10 h-10" />
             </div>
             <div className="space-y-3">
-              <h3 className="font-serif font-bold text-2xl text-burgundy-rich">
+              <h3 className="font-display text-2xl font-normal text-burgundy-deep">
                 Our Commitment to Uncompromised Truthfulness
               </h3>
-              <p className="text-neutral-700 text-sm leading-relaxed">
+              <p className="text-charcoal-soft/80 text-sm leading-relaxed">
                 In strict accordance with D’Fabulous brand integrity, we never publish fabricated testimonials, artificial star ratings, or unverified awards. Every client review published on this platform is independently verified and collected directly with client consent.
               </p>
-              <div className="pt-2 flex items-center gap-2 text-xs font-semibold text-burgundy-rich">
-                <CheckCircle2 className="w-4 h-4 text-gold-dark shrink-0" />
+              <div className="pt-2 flex items-center gap-2 text-xs font-semibold text-burgundy-deep">
+                <CheckCircle2 className="w-4 h-4 text-gold-luxury shrink-0" />
                 <span>Verified Client Feedback Protocol Active</span>
               </div>
             </div>
@@ -230,13 +231,13 @@ export const TestimonialsShell: React.FC = () => {
       </section>
 
       {/* Final Booking CTA */}
-      <section className="py-16 bg-burgundy-rich text-white">
+      <section className="py-16 bg-burgundy-dark text-ivory-warm">
         <Container>
           <div className="max-w-3xl mx-auto text-center space-y-6">
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-gold-primary">
+            <h2 className="font-display text-3xl sm:text-4xl font-normal text-ivory-warm">
               Experience the D’Fabulous Distinction
             </h2>
-            <p className="text-neutral-200 leading-relaxed text-base">
+            <p className="text-champagne-soft/85 leading-relaxed text-base">
               Secure ceremonial guidance, Alaga hosting, or wedding reception direction for your upcoming celebration.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2">

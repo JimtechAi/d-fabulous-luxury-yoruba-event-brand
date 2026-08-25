@@ -2,6 +2,12 @@ import { supabase, isSupabaseConfigured, getSupabaseDiagnostics } from './supaba
 import { SERVICES_LIST } from '../data/brand';
 import { ServiceDefinition } from '../types';
 
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
+
+export function apiUrl(path: string): string {
+  return `${API_BASE_URL}${path}`;
+}
+
 export interface BookingSubmission {
   full_name: string;
   email: string;
@@ -19,6 +25,31 @@ export interface MessageSubmission {
   phone?: string;
   subject?: string;
   message: string;
+}
+
+export interface EventAvailabilityRecord {
+  event_date: string;
+  available: boolean;
+  reason: 'booked' | 'owner_blocked' | string;
+}
+
+function getLocalDateString(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export async function getEventAvailability(): Promise<EventAvailabilityRecord[]> {
+  const start = getLocalDateString();
+  const endDate = new Date();
+  endDate.setFullYear(endDate.getFullYear() + 2);
+  const { data, error } = await supabase.rpc('get_event_availability', {
+    p_start_date: start,
+    p_end_date: getLocalDateString(endDate),
+  });
+  if (error) throw error;
+  return (data || []) as EventAvailabilityRecord[];
 }
 
 export interface DbService {
@@ -44,6 +75,36 @@ export interface DbGalleryItem {
   aspect_ratio: string;
   is_featured: boolean;
   display_order: number;
+}
+
+export interface DbVideoItem {
+  id: string;
+  title: string;
+  video_url: string;
+  poster_url?: string;
+  alt_text: string;
+  category: string;
+  caption?: string;
+  display_order: number;
+}
+
+export function normalizeGalleryImageUrl(imageUrl: string): string {
+  const trimmedUrl = imageUrl.trim();
+  if (!trimmedUrl) return '';
+
+  const galleryAssetMatch = trimmedUrl.match(
+    /\/(?:assets\/gallery|(?:public\/)?images\/gallery)\/(?:[^/?#]+\/)*([^/?#]+)([?#].*)?$/i
+  );
+  if (galleryAssetMatch) {
+    return `/images/gallery/${galleryAssetMatch[1]}${galleryAssetMatch[2] || ''}`;
+  }
+
+  const filenameOnlyMatch = trimmedUrl.match(/^([^/?#]+\.(?:avif|gif|jpe?g|png|webp))(?:([?#].*))?$/i);
+  if (filenameOnlyMatch) {
+    return `/images/gallery/${filenameOnlyMatch[1]}${filenameOnlyMatch[2] || ''}`;
+  }
+
+  return trimmedUrl;
 }
 
 export interface DbTestimonial {
@@ -91,7 +152,7 @@ export async function testSupabaseConnection() {
 
   // Test Server API First
   try {
-    const apiRes = await fetch('/api/diagnostics');
+    const apiRes = await fetch(apiUrl('/api/diagnostics'));
     if (apiRes.ok) {
       const apiData = await apiRes.json();
       return {
@@ -144,13 +205,12 @@ export async function testSupabaseConnection() {
 }
 
 /**
- * Submits a new date availability booking request to public.bookings
- * Tries server API first (/api/bookings) for iframe isolation safety, falling back to direct Supabase client.
+ * Submits a booking through the server so the database write and Resend notifications
+ * always use the same server-side workflow.
  */
 export async function submitBooking(data: BookingSubmission): Promise<{ success: boolean; error?: string; rawError?: any }> {
-  // 1. Try Full-Stack Express Server API
   try {
-    const response = await fetch('/api/bookings', {
+    const response = await fetch(apiUrl('/api/bookings'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -168,56 +228,25 @@ export async function submitBooking(data: BookingSubmission): Promise<{ success:
         error: `${result.error || 'Submission Error'}: ${result.details || 'Unable to record booking.'}`,
       };
     }
-  } catch {
-    // If server API route is not mounted (e.g. static preview), fallback to direct Supabase client call below
-  }
-
-  // 2. Direct Supabase Client Fallback
-  if (!isSupabaseConfigured) {
-    const diag = getSupabaseDiagnostics();
+  } catch (error: unknown) {
+    console.error('Booking server request error:', error);
     return {
       success: false,
-      error: `Database Configuration Error: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are not configured.`,
+      error: 'Booking service is temporarily unavailable. Please try again shortly.',
+      rawError: error,
     };
   }
 
-  try {
-    const { error, status } = await supabase.from('bookings').insert([
-      {
-        full_name: data.full_name,
-        email: data.email,
-        phone: data.phone,
-        event_date: data.event_date,
-        event_location: data.event_location,
-        services_requested: data.services_requested,
-        estimated_guest_count: data.estimated_guest_count || null,
-        celebration_details: data.celebration_details || '',
-        status: 'pending',
-      },
-    ]);
-
-    if (error) {
-      console.error('Supabase booking insert error:', error);
-      const formatted = formatSupabaseError({ ...error, status });
-      return { success: false, error: formatted, rawError: error };
-    }
-
-    return { success: true };
-  } catch (err: any) {
-    console.error('Unexpected booking submission error:', err);
-    const formatted = formatSupabaseError(err);
-    return { success: false, error: formatted, rawError: err };
-  }
+  return {
+    success: false,
+    error: 'Booking service is temporarily unavailable. Please try again shortly.',
+  };
 }
 
-/**
- * Submits a new enquiry message to public.messages
- * Tries server API first (/api/messages) for iframe isolation safety, falling back to direct Supabase client.
- */
+/** Submits a new enquiry through the server-controlled workflow. */
 export async function submitMessage(data: MessageSubmission): Promise<{ success: boolean; error?: string; rawError?: any }> {
-  // 1. Try Full-Stack Express Server API
   try {
-    const response = await fetch('/api/messages', {
+    const response = await fetch(apiUrl('/api/messages'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -235,42 +264,19 @@ export async function submitMessage(data: MessageSubmission): Promise<{ success:
         error: `${result.error || 'Submission Error'}: ${result.details || 'Unable to record message.'}`,
       };
     }
-  } catch {
-    // Fallback to client call
-  }
-
-  // 2. Direct Supabase Client Fallback
-  if (!isSupabaseConfigured) {
+  } catch (error: unknown) {
+    console.error('Message server request error:', error);
     return {
       success: false,
-      error: `Database Configuration Error: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are missing or unconfigured.`,
+      error: 'Message service is temporarily unavailable. Please try again shortly.',
+      rawError: error,
     };
   }
 
-  try {
-    const { error, status } = await supabase.from('messages').insert([
-      {
-        full_name: data.full_name,
-        email: data.email,
-        phone: data.phone || null,
-        subject: data.subject || 'General Enquiry',
-        message: data.message,
-        status: 'unread',
-      },
-    ]);
-
-    if (error) {
-      console.error('Supabase message insert error:', error);
-      const formatted = formatSupabaseError({ ...error, status });
-      return { success: false, error: formatted, rawError: error };
-    }
-
-    return { success: true };
-  } catch (err: any) {
-    console.error('Unexpected message submission error:', err);
-    const formatted = formatSupabaseError(err);
-    return { success: false, error: formatted, rawError: err };
-  }
+  return {
+    success: false,
+    error: 'Message service is temporarily unavailable. Please try again shortly.',
+  };
 }
 
 /**
@@ -278,7 +284,7 @@ export async function submitMessage(data: MessageSubmission): Promise<{ success:
  */
 export async function getServices(): Promise<ServiceDefinition[]> {
   try {
-    const response = await fetch('/api/services');
+    const response = await fetch(apiUrl('/api/services'));
     const result = await response.json();
     if (result?.success && Array.isArray(result.data) && result.data.length > 0) {
       return result.data.map((item: DbService) => ({
@@ -325,7 +331,7 @@ export async function getServices(): Promise<ServiceDefinition[]> {
  */
 export async function getGalleryItems(): Promise<DbGalleryItem[]> {
   try {
-    const response = await fetch('/api/gallery');
+    const response = await fetch(apiUrl('/api/gallery'));
     const result = await response.json();
     if (result?.success && Array.isArray(result.data)) {
       return result.data as DbGalleryItem[];
@@ -349,12 +355,27 @@ export async function getGalleryItems(): Promise<DbGalleryItem[]> {
   }
 }
 
+/** Fetches videos from the single public/videos directory through the server API. */
+export async function getVideoItems(): Promise<DbVideoItem[]> {
+  try {
+    const response = await fetch(apiUrl('/api/videos'));
+    const result = await response.json();
+    if (result?.success && Array.isArray(result.data)) {
+      return result.data as DbVideoItem[];
+    }
+  } catch {
+    // API failed
+  }
+
+  return [];
+}
+
 /**
  * Fetches featured testimonials ordered by display_order.
  */
 export async function getTestimonials(): Promise<DbTestimonial[]> {
   try {
-    const response = await fetch('/api/testimonials');
+    const response = await fetch(apiUrl('/api/testimonials'));
     const result = await response.json();
     if (result?.success && Array.isArray(result.data)) {
       return result.data as DbTestimonial[];
@@ -384,7 +405,7 @@ export async function getTestimonials(): Promise<DbTestimonial[]> {
  */
 export async function getSiteSettings(): Promise<Record<string, unknown>> {
   try {
-    const response = await fetch('/api/settings');
+    const response = await fetch(apiUrl('/api/settings'));
     const result = await response.json();
     if (result?.success && result.data) {
       return result.data as Record<string, unknown>;
