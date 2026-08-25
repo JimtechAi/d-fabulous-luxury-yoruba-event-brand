@@ -77,15 +77,16 @@ function formatError(error: any): string {
 
 async function startServer() {
   const app = express();
-  const requestedPort = Number(process.env.PORT || 3000);
+  const port = Number(process.env.PORT) || 3001;
   const candidatePorts = Array.from(
-    new Set([requestedPort, requestedPort + 1, requestedPort + 2, requestedPort + 3, requestedPort + 4])
+    new Set([port, port + 1, port + 2, port + 3, port + 4])
   );
+  const host = '0.0.0.0';
 
   const listenOnPort = (port: number): Promise<number> =>
     new Promise((resolve, reject) => {
-      const server = app.listen(port, '0.0.0.0', () => {
-        console.log(`Server running on http://0.0.0.0:${port}`);
+      const server = app.listen(port, host, () => {
+        console.log(`Server running on ${host}:${port}`);
         resolve(port);
       });
 
@@ -410,7 +411,7 @@ async function startServer() {
     });
   }
 
-  await listenOnPort(candidatePorts[0]);
+  await listenOnPort(port);
 }
 
 startServer();
