@@ -77,7 +77,7 @@ function formatError(error: any): string {
 
 async function startServer() {
   const app = express();
-  const port = Number(process.env.PORT) || 3001;
+  const port = Number(process.env.PORT) || 3000;
   const candidatePorts = Array.from(
     new Set([port, port + 1, port + 2, port + 3, port + 4])
   );
