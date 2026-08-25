@@ -110,6 +110,11 @@ export const AdminLoginShell: React.FC = () => {
       <Container className="relative z-10 w-full">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-10">
+            <img
+              src="/assets/brand/favicon/favicon.jpeg"
+              alt="D’Fabulous official logo"
+              className="mx-auto mb-6 h-20 w-auto max-w-[240px] object-contain select-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.24)] sm:h-24 sm:max-w-[280px]"
+            />
             <p className="text-xs uppercase tracking-[0.3em] text-gold-luxury mb-4">Private Administration</p>
             <h1 className="font-display text-5xl text-ivory-warm">D’Fabulous Admin</h1>
             <div className="w-16 h-0.5 bg-gold-luxury/70 mx-auto mt-6" />
