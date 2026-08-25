@@ -47,7 +47,10 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service, className = '
     'destination-events': { src: '/images/services/destination-events.webp.jpeg', alt: 'D’Fabulous hosting a destination celebration by the coast at sunset' },
   };
 
-  const serviceImage = serviceImageMap[service.id];
+  const serviceKey = service.id in serviceImageMap
+    ? service.id
+    : service.slug.split('/').filter(Boolean).pop() || service.id;
+  const serviceImage = serviceImageMap[serviceKey];
 
   return (
     <article className={`group relative bg-ivory-warm border border-burgundy-deep/15 hover:border-gold-luxury/70 p-6 sm:p-8 transition-all duration-500 hover:shadow-xl flex flex-col justify-between ${className}`}>
