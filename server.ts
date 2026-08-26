@@ -391,10 +391,10 @@ async function startServer() {
   const app = express();
   const port = Number(process.env.PORT) || 3000;
   const host = '0.0.0.0';
-  const allowedOrigins = cleanEnv(
-    process.env.CORS_ALLOWED_ORIGINS || 'https://d-fabulous-luxury-yoruba-event-bran.vercel.app'
-  )
-    .split(',')
+  const allowedOrigins = [
+    'https://d-fabulous-luxury-yoruba-event-bran.vercel.app',
+    ...cleanEnv(process.env.CORS_ALLOWED_ORIGINS).split(','),
+  ]
     .map((origin) => origin.trim().replace(/\/+$/, ''))
     .filter(Boolean);
 
