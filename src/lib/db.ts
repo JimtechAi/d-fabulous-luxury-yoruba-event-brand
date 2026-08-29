@@ -2,7 +2,11 @@ import { supabase, isSupabaseConfigured, getSupabaseDiagnostics } from './supaba
 import { SERVICES_LIST } from '../data/brand';
 import { ServiceDefinition } from '../types';
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '');
+const productionApiBaseUrl = 'https://d-fabulous-luxury-yoruba-event-brand-1.onrender.com';
+
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? productionApiBaseUrl : ''))
+  .trim()
+  .replace(/\/+$/, '');
 
 export function apiUrl(path: string): string {
   return `${API_BASE_URL}${path}`;
