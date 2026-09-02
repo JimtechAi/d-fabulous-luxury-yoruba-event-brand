@@ -785,7 +785,7 @@ async function startServer() {
         res.status(status >= 400 ? status : 500).json({
           success: false,
           error: dateUnavailable ? 'Date Unavailable' : 'Database Operation Error',
-          details: dateUnavailable ? 'This date is no longer available. Please select another date.' : 'Unable to record your booking at this time.',
+          details: dateUnavailable ? 'This date is no longer available. Please select another date.' : formatError(error),
         });
         return;
       }
