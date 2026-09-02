@@ -38,13 +38,13 @@ const getServiceIcon = (id: string) => {
 export const ServiceCard: React.FC<ServiceCardProps> = ({ service, className = '' }) => {
   const serviceImageMap: Record<string, { src: string; alt: string }> = {
     'alaga-iduro': { src: '/images/services/alaga-iduro.webp', alt: 'D’Fabulous leading a Nigerian groom family ceremonial presentation' },
-    'alaga-ijoko': { src: '/images/services/alaga-ijoko.webp.jpeg', alt: 'D’Fabulous hosting a Yoruba traditional engagement with family blessing rituals' },
-    'wedding-mc': { src: '/images/services/wedding-mc.webp.jpeg', alt: 'D’Fabulous as a luxury wedding master of ceremonies speaking to guests from the stage' },
-    'engagement-coordination': { src: '/images/services/engagement-cordination.webp.jpeg', alt: 'D’Fabulous coordinating a traditional Yoruba engagement ceremony with elegant cultural flow' },
-    'private-events': { src: '/images/services/private-events.webp.jpeg', alt: 'D’Fabulous hosting a private luxury event with refined ceremonial presence' },
-    'eru-iyawo': { src: '/images/services/eru-iyawo.webp.jpeg', alt: 'Traditional Yoruba dowry presentation styled with elegance and cultural significance' },
-    'brand-influencing': { src: '/images/services/brand-influencing.webp.jpeg', alt: 'D’Fabulous representing a luxury cultural brand partnership in a polished editorial setting' },
-    'destination-events': { src: '/images/services/destination-events.webp.jpeg', alt: 'D’Fabulous hosting a destination celebration by the coast at sunset' },
+    'alaga-ijoko': { src: '/images/services/alaga-ijoko.webp', alt: 'D’Fabulous hosting a Yoruba traditional engagement with family blessing rituals' },
+    'wedding-mc': { src: '/images/services/wedding-mc.webp', alt: 'D’Fabulous as a luxury wedding master of ceremonies speaking to guests from the stage' },
+    'engagement-coordination': { src: '/images/services/engagement-cordination.webp', alt: 'D’Fabulous coordinating a traditional Yoruba engagement ceremony with elegant cultural flow' },
+    'private-events': { src: '/images/services/private-events.webp', alt: 'D’Fabulous hosting a private luxury event with refined ceremonial presence' },
+    'eru-iyawo': { src: '/images/services/eru-iyawo.webp', alt: 'Traditional Yoruba dowry presentation styled with elegance and cultural significance' },
+    'brand-influencing': { src: '/images/services/brand-influencing.webp', alt: 'D’Fabulous representing a luxury cultural brand partnership in a polished editorial setting' },
+    'destination-events': { src: '/images/services/destination-events.webp', alt: 'D’Fabulous hosting a destination celebration by the coast at sunset' },
   };
 
   const serviceKey = service.id in serviceImageMap

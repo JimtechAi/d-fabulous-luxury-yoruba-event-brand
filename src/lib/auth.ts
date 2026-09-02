@@ -1,12 +1,14 @@
 import { Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 
-export type AdminRole = 'owner' | 'admin';
+export type AdminRole = 'owner' | 'admin' | 'staff' | 'viewer';
 
 export interface AdminProfile {
   id: string;
   email: string | null;
-  role: string;
+  role: AdminRole | string;
+  permissions?: string[];
+  is_active?: boolean;
 }
 
 export interface CurrentAdminResult {
@@ -17,7 +19,7 @@ export interface CurrentAdminResult {
 }
 
 export function isAuthorizedAdminRole(role: unknown): role is AdminRole {
-  return role === 'owner' || role === 'admin';
+  return role === 'owner' || role === 'admin' || role === 'staff' || role === 'viewer';
 }
 
 export async function getCurrentSession(): Promise<Session | null> {
@@ -26,34 +28,37 @@ export async function getCurrentSession(): Promise<Session | null> {
   return data.session;
 }
 
-export async function getCurrentAdmin(): Promise<CurrentAdminResult> {
+export async function getCurrentAdmin(currentSession?: Session | null): Promise<CurrentAdminResult> {
   let session: Session | null;
 
-  try {
-    session = await getCurrentSession();
-  } catch {
-    return { session: null, profile: null, authorized: false, error: 'profile_lookup' };
+  if (currentSession !== undefined) {
+    session = currentSession;
+  } else {
+    try {
+      session = await getCurrentSession();
+    } catch {
+      return { session: null, profile: null, authorized: false, error: 'profile_lookup' };
+    }
   }
 
   if (!session?.user) {
     return { session: null, profile: null, authorized: false };
   }
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, email, role')
-    .eq('id', session.user.id)
-    .maybeSingle();
-
-  if (error) {
-    return { session, profile: null, authorized: false, error: 'profile_lookup' };
+  const response = await fetch('/api/admin/session', {
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+  const result = await response.json().catch(() => null);
+  if (!response.ok || !result?.success || !result.data) {
+    return {
+      session,
+      profile: null,
+      authorized: false,
+      error: response.status === 404 ? 'profile_missing' : response.status === 401 || response.status === 403 ? 'unauthorized' : 'profile_lookup',
+    };
   }
 
-  if (!data) {
-    return { session, profile: null, authorized: false, error: 'profile_missing' };
-  }
-
-  const profile = data as AdminProfile;
+  const profile = result.data as AdminProfile;
   if (!isAuthorizedAdminRole(profile.role)) {
     return { session, profile, authorized: false, error: 'unauthorized' };
   }

@@ -18,7 +18,6 @@ export const BRAND_INFO = {
     "International Distinction"
   ],
   placeholders: {
-    phone: "+44 7878 709883",
     email: "Fabulousevents@hotmail.com",
     address: "London, United Kingdom",
     instagram: "@dfabulousuk",
@@ -27,7 +26,6 @@ export const BRAND_INFO = {
     bookingFormUrl: "/book",
     emailUrl: "mailto:Fabulousevents@hotmail.com",
     whatsappUrl: "https://wa.me/447878709883",
-    phoneUrl: "tel:+447878709883",
   }
 } as const;
 
@@ -160,7 +158,8 @@ export const ALL_ROUTES = [
   { path: "/faq", title: "Frequently Asked Questions | D’Fabulous Yoruba Events", desc: "Find answers to common questions regarding Alaga Iduro vs Alaga Ijoko, wedding MC hosting, international travel, and booking workflows." },
   { path: "/privacy", title: "Privacy Policy | D’Fabulous", desc: "Official privacy policy and personal data protection information." },
   { path: "/cookies", title: "Cookie Policy | D’Fabulous", desc: "Information regarding cookie usage and website preferences." },
-  { path: "/terms", title: "Terms of Service | D’Fabulous", desc: "Website usage terms and legal conditions." },
-  { path: "/booking-terms", title: "Booking Terms & Conditions | D’Fabulous", desc: "General terms governing event reservations, scheduling, and consultations." },
-  { path: "/accessibility", title: "Accessibility Statement | D’Fabulous", desc: "Our commitment to digital accessibility and WCAG 2.2 AA standards." }
+  { path: "/cancellation-refund-rescheduling", title: "Cancellation, Refund & Rescheduling Policy | D’Fabulous", desc: "Cancellation, refund and rescheduling information for D’Fabulous event bookings." },
+  { path: "/terms", title: "Terms of Service | D’Fabulous Luxury Yoruba Events", desc: "Terms governing the D’Fabulous website, event enquiries, bookings and related services." },
+  { path: "/booking-terms", title: "Booking Terms & Conditions | D’Fabulous Events", desc: "Booking terms for D’Fabulous event services, including deposits, payment schedules, cancellations and event responsibilities." },
+  { path: "/accessibility", title: "Accessibility Statement | D’Fabulous Events", desc: "D’Fabulous Events’ accessibility objectives, known limitations and contact route for reporting accessibility problems." }
 ] as const;

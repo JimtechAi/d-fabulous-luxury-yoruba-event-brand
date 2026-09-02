@@ -56,7 +56,7 @@ export const AdminLoginShell: React.FC = () => {
     setState('submitting');
     setErrorMessage('');
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       if (import.meta.env.DEV) {
         console.error('[D’Fabulous Admin Auth] Supabase sign-in error:', error);
@@ -66,7 +66,7 @@ export const AdminLoginShell: React.FC = () => {
       return;
     }
 
-    const result = await getCurrentAdmin();
+    const result = await getCurrentAdmin(signInData.session);
     if (!result.authorized) {
       await signOut().catch(() => undefined);
       setState('denied');
@@ -111,7 +111,7 @@ export const AdminLoginShell: React.FC = () => {
         <div className="max-w-md mx-auto">
           <div className="text-center mb-10">
             <img
-              src="/assets/brand/favicon/favicon.jpeg"
+              src="/assets/brand/favicon/favicon.png"
               alt="D’Fabulous official logo"
               className="mx-auto mb-6 h-20 w-auto max-w-[240px] object-contain select-none drop-shadow-[0_2px_10px_rgba(0,0,0,0.24)] sm:h-24 sm:max-w-[280px]"
             />

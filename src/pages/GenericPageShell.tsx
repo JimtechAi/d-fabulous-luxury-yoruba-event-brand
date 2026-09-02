@@ -58,37 +58,37 @@ const SERVICE_EDITORIAL_CONTENT: Record<string, ServiceEditorialContent> = {
       'Bridal party entrances, toast introductions, and cake cutting',
       'Cultural sensitivity for multicultural and international guests',
     ],
-    images: ['/assets/services/wedding-mc/wedding-mc1.webp.jpeg'],
+    images: ['/assets/services/wedding-mc/wedding-mc1.webp'],
     imageAlt: 'D’Fabulous hosting a luxury wedding reception from the stage',
   },
   'engagement-coordination': {
     intro: 'Traditional engagement protocol coordination keeps ceremonial items, family seating hierarchies, and the event timeline aligned so families can remain present in the moment.',
     deliverables: ['Ceremonial timeline structuring', 'Traditional engagement floor direction', 'Family and vendor flow alignment', 'Respectful handling of key protocol moments'],
-    images: ['/assets/services/engagement/engagement1.webp.jpeg', '/assets/services/engagement/engagement2.webp.jpeg', '/assets/services/engagement/engagement3.webp.jpeg'],
+    images: ['/assets/services/engagement/engagement1.webp', '/assets/services/engagement/engagement2.webp', '/assets/services/engagement/engagement3.webp'],
     imageAlt: 'Traditional Yoruba engagement ceremony arranged with considered detail',
   },
   'private-events': {
     intro: 'For milestone birthdays, anniversaries, chieftaincy celebrations, and private galas, D’Fabulous brings a regal presence that makes the room feel considered, warm, and beautifully paced.',
     deliverables: ['Elegant event hosting', 'Guest and programme flow direction', 'Warm ceremonial introductions', 'Bespoke support for private celebrations'],
-    images: ['/assets/services/private-events/private-events1.webp.jpeg', '/assets/services/private-events/private-events2.webp.jpeg', '/assets/services/private-events/private-events3.webp.jpeg'],
+    images: ['/assets/services/private-events/private-events1.webp', '/assets/services/private-events/private-events2.webp', '/assets/services/private-events/private-events3.webp'],
     imageAlt: 'D’Fabulous bringing refined presence to a private celebration',
   },
   'eru-iyawo': {
     intro: 'Eru Iyawo presentation is shaped with visual care and cultural significance, from the arrangement of traditional gifts to the moment they are inspected and unveiled.',
     deliverables: ['Traditional gift wrapping guidance', 'Presentation box arrangement', 'Dowry gift inspection support', 'Ceremonial unveiling protocols'],
-    images: ['/assets/services/eru-iyawo/eru-iyawo1.webp.jpeg', '/assets/services/eru-iyawo/eru-iyawo2.webp.jpeg', '/assets/services/eru-iyawo/eru-iyawo3.webp.jpeg'],
+    images: ['/assets/services/eru-iyawo/eru-iyawo1.webp', '/assets/services/eru-iyawo/eru-iyawo2.webp', '/assets/services/eru-iyawo/eru-iyawo3.webp'],
     imageAlt: 'Eru Iyawo traditional gift presentation prepared for a Yoruba engagement',
   },
   'brand-influencing': {
     intro: 'D’Fabulous provides cultural consultancy and host representation for high-profile cultural galas, fashion showcases, and luxury brand events that require credible presence and cultural fluency.',
     deliverables: ['Cultural consultancy', 'Host representation', 'Luxury event appearances', 'Culturally considered audience engagement'],
-    images: ['/assets/services/cultural-ambassador/cultural-ambassador1.webp.jpeg', '/assets/services/cultural-ambassador/cultural-ambassador2.webp.jpeg', '/assets/services/cultural-ambassador/cultural-ambassador3.webp.jpeg'],
+    images: ['/assets/services/cultural-ambassador/cultural-ambassador1.webp', '/assets/services/cultural-ambassador/cultural-ambassador2.webp', '/assets/services/cultural-ambassador/cultural-ambassador3.webp'],
     imageAlt: 'Cultural and luxury brand event representation by D’Fabulous',
   },
   'destination-events': {
     intro: 'For destination weddings across Europe, North America, and internationally, D’Fabulous brings ceremonial leadership and cultural clarity wherever the celebration takes place.',
     deliverables: ['International destination event hosting', 'Yoruba traditional engagement leadership', 'Coordination across multicultural guest groups', 'Culturally faithful ceremony direction'],
-    images: ['/images/services/destination-events.webp.jpeg'],
+    images: ['/images/services/destination-events.webp'],
     imageAlt: 'D’Fabulous leading a destination Yoruba celebration',
   },
 };
@@ -105,11 +105,11 @@ export const GenericPageShell: React.FC<GenericPageShellProps> = ({ path }) => {
   const serviceContent = serviceDetail ? SERVICE_EDITORIAL_CONTENT[serviceDetail.id] : undefined;
 
   const serviceVideoMap: Record<string, string> = {
-    '/services/alaga-ijoko': '/videos/video1.webp.mp4',
+    '/services/alaga-ijoko': '/videos/video1.mp4',
   };
 
   const serviceVideoPosterMap: Record<string, string> = {
-    '/services/alaga-ijoko': '/images/services/alaga-ijoko.webp.jpeg',
+    '/services/alaga-ijoko': '/images/services/alaga-ijoko.webp',
   };
 
   const serviceVideoSrc = serviceDetail ? serviceVideoMap[path] : undefined;

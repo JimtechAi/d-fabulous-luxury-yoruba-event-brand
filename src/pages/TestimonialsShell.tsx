@@ -32,67 +32,14 @@ export const TestimonialsShell: React.FC = () => {
     });
   }, []);
 
-  const defaultTestimonials: TestimonialItem[] = [
-    {
-      id: '1',
-      quote: 'The ceremony felt beautifully guided from start to finish—confident, warm, and deeply respectful of our family traditions.',
-      clientNames: 'Private Couple Review',
-      eventType: 'Traditional Engagement (Alaga Ijoko)',
-      location: 'London, UK',
-      isPlaceholder: true,
-    },
-    {
-      id: '2',
-      quote: 'The reception flow was seamless and energising. Every transition felt polished, gracious, and perfectly timed.',
-      clientNames: 'Family Experience',
-      eventType: 'Wedding Reception MC',
-      location: 'Kent, UK',
-      isPlaceholder: true,
-    },
-    {
-      id: '3',
-      quote: 'Our destination celebration was handled with elegance and cultural clarity, making the entire experience feel effortless for guests.',
-      clientNames: 'Planner Recommendation',
-      eventType: 'Destination Yoruba Event',
-      location: 'Europe Destination',
-      isPlaceholder: true,
-    },
-    {
-      id: '4',
-      quote: 'The dowry presentation was presented with exceptional grace, warmth, and a strong sense of ceremony and family honour.',
-      clientNames: 'Family Review',
-      eventType: 'Eru Iyawo Presentation',
-      location: 'Greater London, UK',
-      isPlaceholder: true,
-    },
-    {
-      id: '5',
-      quote: 'The coordination of both families and ceremonial details was superb. The event felt calm, elegant, and beautifully structured.',
-      clientNames: 'Couple & Family Feedback',
-      eventType: 'Traditional Engagement Coordination',
-      location: 'Manchester, UK',
-      isPlaceholder: true,
-    },
-    {
-      id: '6',
-      quote: 'From the welcome to the final hour, the atmosphere was elevated, joyful, and deeply authentic to our cultural heritage.',
-      clientNames: 'Private Celebration Review',
-      eventType: 'Private Milestone Celebration',
-      location: 'London, UK',
-      isPlaceholder: true,
-    },
-  ];
-
-  const testimonials: TestimonialItem[] = dbTestimonials.length > 0
-    ? dbTestimonials.map((t) => ({
-        id: t.id,
-        quote: t.quote,
-        clientNames: t.client_names,
-        eventType: t.event_type,
-        location: t.location || '',
-        isPlaceholder: t.is_placeholder,
-      }))
-    : defaultTestimonials;
+  const testimonials: TestimonialItem[] = dbTestimonials.map((t) => ({
+    id: t.id,
+    quote: t.quote,
+    clientNames: t.client_names,
+    eventType: t.event_type,
+    location: t.location || '',
+    isPlaceholder: t.is_placeholder,
+  }));
 
   const recognitionItems = [
     {
@@ -148,18 +95,30 @@ export const TestimonialsShell: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {testimonials.map((t) => (
-              <TestimonialCard
-                key={t.id}
-                quote={t.quote}
-                clientNames={t.clientNames}
-                eventType={t.eventType}
-                location={t.location}
-                isPlaceholder={t.isPlaceholder ?? true}
-              />
-            ))}
-          </div>
+          {testimonials.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {testimonials.map((t) => (
+                <TestimonialCard
+                  key={t.id}
+                  quote={t.quote}
+                  clientNames={t.clientNames}
+                  eventType={t.eventType}
+                  location={t.location}
+                  isPlaceholder={false}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-none border border-burgundy-deep/15 bg-white p-8 sm:p-12 text-center shadow-sm">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center border border-gold-luxury/30 bg-ivory-warm text-gold-luxury">
+                <MessageSquare className="h-7 w-7" />
+              </div>
+              <h3 className="mt-6 font-display text-2xl text-burgundy-deep">Client testimonials will be published here</h3>
+              <p className="mt-3 mx-auto max-w-2xl text-sm leading-relaxed text-charcoal-soft/80">
+                There are no verified reviews available yet. We do not publish placeholder testimonials or fabricated client feedback.
+              </p>
+            </div>
+          )}
         </Container>
       </section>
 

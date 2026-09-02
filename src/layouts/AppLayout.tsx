@@ -10,7 +10,7 @@ import { SkipToContent } from '../components/SkipToContent';
 import { Button } from '../components/Button';
 import { BRAND_INFO } from '../data/brand';
 import { useRouter } from '../lib/router';
-import { CalendarCheck, Facebook, Instagram, MessageCircle, Music2, Phone } from 'lucide-react';
+import { CalendarCheck, Facebook, Instagram, MessageCircle, Music2 } from 'lucide-react';
 
 const FLOATING_SOCIAL_LINKS = [
   { name: 'Facebook', href: 'https://www.facebook.com/share/1Gw84T9QFs/', icon: Facebook },
@@ -60,9 +60,6 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
               </Button>
               <a href={BRAND_INFO.placeholders.whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="Message D’Fabulous on WhatsApp" className="inline-flex h-10 w-10 items-center justify-center border border-[#25D366] text-[#25D366] transition-colors hover:bg-[#25D366] hover:text-black-rich focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-luxury">
                 <MessageCircle className="h-4 w-4" aria-hidden="true" />
-              </a>
-              <a href={BRAND_INFO.placeholders.phoneUrl} aria-label={`Call D’Fabulous at ${BRAND_INFO.placeholders.phone}`} className="inline-flex h-10 w-10 items-center justify-center border border-champagne-soft/50 text-champagne-soft transition-colors hover:border-gold-luxury hover:text-gold-luxury focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-luxury">
-                <Phone className="h-4 w-4" aria-hidden="true" />
               </a>
             </div>
           </div>

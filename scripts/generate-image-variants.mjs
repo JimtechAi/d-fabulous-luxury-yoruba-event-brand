@@ -12,6 +12,7 @@ const sourceDirectories = [
   'public/images/services',
   'public/assets/about',
   'public/assets/services',
+  'public/assets/hero',
 ];
 const widths = [400, 800, 1200, 1600];
 const sourceExtensions = /\.(?:webp|jpe?g|png)$/i;

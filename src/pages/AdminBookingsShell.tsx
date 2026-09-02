@@ -22,12 +22,14 @@ import { getCurrentAdmin, signOut } from '../lib/auth';
 import { CURRENCIES, type CurrencyCode } from '../data/currencies';
 import {
   buildWhatsAppUrl,
+  buildBookingConfirmationMessage,
   deleteBooking,
   formatAdminDate,
   formatAdminDateTime,
   formatCurrency,
   getAdminBookings,
   getAdminPaymentsForBooking,
+  getBookingReferenceValue,
   getBookingPaymentSummary,
   getPaymentStatusClass,
   getStatusClass,
@@ -421,6 +423,28 @@ export const AdminBookingsShell: React.FC = () => {
     setSuccess('WhatsApp conversation opened.');
   };
 
+  const handleConfirmationWhatsApp = () => {
+    if (!selectedItem || !paymentSummary) return;
+    const message = buildBookingConfirmationMessage(selectedItem, paymentSummary);
+    setWhatsAppMessage(message);
+    setWhatsAppTemplate('Booking confirmation');
+
+    const normalized = normalizeNigerianPhoneNumber(selectedItem.phone);
+    if (!normalized) {
+      setError('This client phone number is not valid for WhatsApp messaging.');
+      return;
+    }
+
+    const url = buildWhatsAppUrl(selectedItem.phone, message);
+    if (!url) {
+      setError('Unable to create a valid WhatsApp link for this client.');
+      return;
+    }
+
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setSuccess('Confirmation message sent via WhatsApp.');
+  };
+
   const handleLogout = async () => {
     await signOut().catch(() => undefined);
     navigate('/admin/login');
@@ -434,9 +458,12 @@ export const AdminBookingsShell: React.FC = () => {
     <main className="min-h-screen bg-ivory-warm text-black-rich">
       <header className="bg-burgundy-dark text-ivory-warm border-b border-gold-luxury/30">
         <Container className="flex items-center justify-between gap-6 py-5">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-gold-luxury">Private Administration</p>
-            <h1 className="font-display text-3xl">D’Fabulous Admin</h1>
+          <div className="flex items-center gap-4">
+            <img src="/assets/brand/logo/dfabulous-logo.png" alt="D’Fabulous official logo" className="h-14 w-auto max-w-[200px] object-contain" />
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-gold-luxury">Private Administration</p>
+              <h1 className="font-display text-3xl">D’Fabulous Admin</h1>
+            </div>
           </div>
           <Button variant="outline-light" size="sm" onClick={handleLogout} icon={<ArrowUpRight className="w-4 h-4" />}>
             LOG OUT
@@ -540,6 +567,7 @@ export const AdminBookingsShell: React.FC = () => {
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="font-medium text-burgundy-deep">{item.full_name || 'Guest booking'}</p>
+                            <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-gold-dark">{getBookingReferenceValue(item.booking_reference)}</p>
                             <p className="mt-1 text-xs uppercase tracking-[0.15em] text-gold-dark">{(item.services_requested || ['Custom event'])[0]}</p>
                           </div>
                           <span className={`inline-flex rounded-none px-2 py-1 text-[10px] uppercase tracking-[0.2em] ${getStatusClass(item.status)}`}>
@@ -567,6 +595,7 @@ export const AdminBookingsShell: React.FC = () => {
                       <div>
                         <p className="text-[10px] uppercase tracking-[0.2em] text-gold-dark">Selected booking</p>
                         <h3 className="font-display text-4xl text-burgundy-deep">{selectedItem.full_name || 'Guest booking'}</h3>
+                        <p className="mt-2 inline-flex select-all border border-gold-luxury/30 bg-ivory-warm px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-gold-dark" title="Booking reference">Booking reference: {getBookingReferenceValue(selectedItem.booking_reference)}</p>
                       </div>
                       <span className={`inline-flex rounded-none px-2 py-1 text-[10px] uppercase tracking-[0.2em] ${getStatusClass(selectedItem.status)}`}>
                         {titleCase(selectedItem.status || 'pending')}
@@ -683,7 +712,10 @@ export const AdminBookingsShell: React.FC = () => {
                       </div>
                       <textarea value={whatsAppMessage} onChange={(event) => setWhatsAppMessage(event.target.value)} className="mt-3 min-h-[100px] w-full border border-gold-luxury/20 bg-ivory-warm px-3 py-2 text-sm text-charcoal-soft focus:outline-none focus:ring-2 focus:ring-gold-luxury" placeholder="Edit before sending" />
                       <div className="mt-3 flex items-center gap-2 text-xs uppercase tracking-[0.15em] text-gold-dark"><Phone className="h-4 w-4" />{selectedItem.phone ? normalizeNigerianPhoneNumber(selectedItem.phone) || selectedItem.phone : 'No phone number'}</div>
-                      <Button onClick={handleWhatsAppOpen} className="mt-3" icon={<MessageSquareText className="h-4 w-4" />}>Open WhatsApp</Button>
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        <Button onClick={handleConfirmationWhatsApp} className="mt-0" icon={<MessageSquareText className="h-4 w-4" />}>Send Confirmation via WhatsApp</Button>
+                        <Button variant="secondary" onClick={handleWhatsAppOpen} className="mt-0" icon={<MessageSquareText className="h-4 w-4" />}>Open WhatsApp</Button>
+                      </div>
                     </div>
 
                     <div className="mt-6 border-t border-gold-luxury/20 pt-5">

@@ -256,44 +256,30 @@ export const HomeShell: React.FC = () => {
             className="mb-12"
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {dbTestimonials.length > 0 ? (
-              dbTestimonials.map((t) => (
+          {dbTestimonials.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {dbTestimonials.map((t) => (
                 <TestimonialCard
                   key={t.id}
                   quote={t.quote}
                   clientNames={t.client_names}
                   eventType={t.event_type}
                   location={t.location}
-                  isPlaceholder={t.is_placeholder}
+                  isPlaceholder={false}
                 />
-              ))
-            ) : (
-              <>
-                <TestimonialCard
-                  quote="The ceremony felt beautifully guided from start to finish—confident, warm, and deeply respectful of our family traditions."
-                  clientNames="Private Couple Review"
-                  eventType="Traditional Engagement (Alaga Ijoko)"
-                  location="London, UK"
-                  isPlaceholder={true}
-                />
-                <TestimonialCard
-                  quote="The reception flow was seamless and energising. Every transition felt polished, gracious, and perfectly timed."
-                  clientNames="Family Experience"
-                  eventType="Wedding Reception MC"
-                  location="Kent, UK"
-                  isPlaceholder={true}
-                />
-                <TestimonialCard
-                  quote="Our destination celebration was handled with elegance and cultural clarity, making the whole event feel effortless for guests."
-                  clientNames="Planner Recommendation"
-                  eventType="Destination Yoruba Event"
-                  location="Europe Destination"
-                  isPlaceholder={true}
-                />
-              </>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-none border border-burgundy-deep/15 bg-white p-8 sm:p-12 text-center shadow-sm">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center border border-gold-luxury/30 bg-ivory-warm text-gold-luxury">
+                <ShieldCheck className="h-7 w-7" />
+              </div>
+              <h3 className="mt-6 font-display text-2xl text-burgundy-deep">Verified client testimonials are being prepared</h3>
+              <p className="mt-3 mx-auto max-w-2xl text-sm leading-relaxed text-charcoal-soft/80">
+                We currently have no published testimonials to display. This page remains intentionally free of fabricated reviews or placeholder client content.
+              </p>
+            </div>
+          )}
         </Container>
       </section>
 

@@ -19,7 +19,7 @@ export const TestimonialCard: React.FC<TestimonialCardProps> = ({
   clientNames,
   eventType,
   location,
-  isPlaceholder = true,
+  isPlaceholder = false,
   className = '',
 }) => {
   return (
@@ -45,12 +45,6 @@ export const TestimonialCard: React.FC<TestimonialCardProps> = ({
             {eventType} {location ? `• ${location}` : ''}
           </span>
         </div>
-
-        {isPlaceholder && (
-          <span className="text-[9px] font-mono uppercase tracking-widest text-gold-luxury/90 bg-burgundy-deep/80 border border-gold-luxury/30 px-2.5 py-1 self-start sm:self-auto">
-            Placeholder
-          </span>
-        )}
       </div>
     </article>
   );

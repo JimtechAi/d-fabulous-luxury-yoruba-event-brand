@@ -17,6 +17,7 @@ export type PaymentStatus = 'unpaid' | 'part payment' | 'fully paid' | 'refunded
 
 export interface AdminBookingRecord {
   id: string;
+  booking_reference?: string | null;
   full_name: string | null;
   email: string | null;
   phone: string | null;
@@ -110,6 +111,26 @@ export interface AdminBlockedDateRecord {
 
 export type AdminSettingsValues = Record<string, string | boolean>;
 
+async function adminApiRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) throw formatAdminDataError(sessionError);
+  if (!sessionData.session) throw new Error('Your admin session has expired. Please sign in again.');
+
+  const response = await fetch(apiUrl(path), {
+    ...init,
+    headers: {
+      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init.headers || {}),
+      Authorization: `Bearer ${sessionData.session.access_token}`,
+    },
+  });
+  const result = await response.json().catch(() => null);
+  if (!response.ok || !result?.success) {
+    throw new Error(result?.details || result?.error || 'Unable to complete the administrative request.');
+  }
+  return result.data as T;
+}
+
 export function getCurrencyCode(value: string | null | undefined, fallback: CurrencyCode = 'GBP'): CurrencyCode {
   return getCurrency(value, fallback).code;
 }
@@ -166,6 +187,32 @@ export function buildWhatsAppUrl(phone: string | null | undefined, message?: str
   const cleanPhone = normalized.replace(/^\+/, '');
   const finalMessage = message?.trim() ? `?text=${encodeURIComponent(message.trim())}` : '';
   return `https://wa.me/${cleanPhone}${finalMessage}`;
+}
+
+export function getBookingReferenceValue(rawReference: string | null | undefined): string {
+  const cleaned = (rawReference || '').trim();
+  if (cleaned) return cleaned.toUpperCase();
+  return 'Not assigned';
+}
+
+export function getMinimumDepositAmount(totalAmount: number | string | null | undefined): number {
+  const total = Math.max(0, parseMoney(totalAmount));
+  return Number((total * 0.3).toFixed(2));
+}
+
+export function buildBookingConfirmationMessage(
+  booking: Partial<AdminBookingRecord> | null | undefined,
+  paymentSummary?: { total_amount: number; amount_paid: number; balance_due: number; currency: CurrencyCode } | null,
+): string {
+  const customerName = booking?.full_name || 'there';
+  const totalAmount = paymentSummary?.total_amount ?? parseMoney((booking as { booking_amount?: number | string | null } | null | undefined)?.booking_amount ?? 0);
+  const amountPaid = paymentSummary?.amount_paid ?? 0;
+  const balanceDue = paymentSummary?.balance_due ?? Math.max(0, totalAmount - amountPaid);
+  const currency = paymentSummary?.currency ?? getBookingCurrency(booking, 'GBP');
+  const eventDate = booking?.event_date ? new Date(`${booking.event_date}T00:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'your selected date';
+  const reference = getBookingReferenceValue(booking?.booking_reference);
+  const minimumDeposit = getMinimumDepositAmount(totalAmount);
+  return `Hello ${customerName}, this is D’Fabulous. We are delighted to confirm your booking reference ${reference} for ${eventDate}. Your total booking amount is ${formatCurrency(totalAmount, currency)}. To secure your date, a minimum deposit of ${formatCurrency(minimumDeposit, currency)} (30%) is required. We have currently received ${formatCurrency(amountPaid, currency)} and the remaining balance due is ${formatCurrency(balanceDue, currency)}. Please make the deposit as soon as possible to lock in your date and secure your event. We look forward to creating your unforgettable celebration.`;
 }
 
 export function derivePaymentStatus(totalAmount: number | string | null | undefined, amountPaid: number | string | null | undefined, explicitStatus?: string | null): PaymentStatus {
@@ -281,19 +328,7 @@ export function getPaymentStatusClass(status: string | null | undefined): string
 }
 
 export async function getAdminBookings(): Promise<AdminBookingRecord[]> {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError) throw formatAdminDataError(sessionError);
-  if (!sessionData.session) {
-    throw new Error('No authenticated Supabase session is available for the bookings query.');
-  }
-
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('id, full_name, email, phone, event_date, event_location, booking_amount, services_requested, estimated_guest_count, celebration_details, status, created_at, updated_at')
-    .order('created_at', { ascending: false });
-
-  if (error) throw formatAdminDataError(error);
-  const bookings = (data ?? []) as AdminBookingRecord[];
+  const bookings = await adminApiRequest<AdminBookingRecord[]>('/api/admin/data/bookings');
   let paymentTotals: Record<string, Partial<Record<CurrencyCode, number>>> = {};
   try {
     paymentTotals = await getAdminPaymentsForBookings(bookings.map((booking) => booking.id));
@@ -304,79 +339,17 @@ export async function getAdminBookings(): Promise<AdminBookingRecord[]> {
 }
 
 export async function getAdminPaymentsForBooking(bookingId: string): Promise<PaymentRecord[]> {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError) throw formatAdminDataError(sessionError);
-  if (!sessionData.session) {
-    throw new Error('No authenticated Supabase session is available for the payment history query.');
-  }
-
-  const { data, error } = await supabase
-    .from('payments')
-    .select('id, booking_id, user_id, amount, currency, payment_type, provider, status, gateway_reference, gateway_transaction_id, payment_method, customer_email, metadata, paid_at, created_at, updated_at')
-    .eq('booking_id', bookingId)
-    // Newest first; id breaks ties so identical timestamps stay deterministic.
-    .order('created_at', { ascending: false })
-    .order('id', { ascending: false });
-
-  if (error) {
-    if (isMissingTableError(error)) return [];
-    throw formatAdminDataError(error);
-  }
-  return (data ?? []) as PaymentRecord[];
+  const payments = await adminApiRequest<PaymentRecord[]>('/api/admin/data/payments');
+  return payments.filter((payment) => payment.booking_id === bookingId);
 }
 
 export async function getAdminPayments(): Promise<PaymentRecord[]> {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError) throw formatAdminDataError(sessionError);
-  if (!sessionData.session) {
-    throw new Error('No authenticated Supabase session is available for the payments query.');
-  }
-
-  const { data, error } = await supabase
-    .from('payments')
-    .select('id, booking_id, user_id, amount, currency, payment_type, provider, status, gateway_reference, gateway_transaction_id, payment_method, customer_email, metadata, paid_at, created_at, updated_at')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    if (isMissingTableError(error)) return [];
-    throw formatAdminDataError(error);
-  }
-
-  const paymentRows = (data ?? []) as PaymentRecord[];
-  const bookingIds = Array.from(new Set(paymentRows.map((payment) => payment.booking_id).filter(Boolean)));
-  if (!bookingIds.length) return paymentRows;
-
-  const { data: bookings, error: bookingError } = await supabase
-    .from('bookings')
-    .select('id, full_name, email')
-    .in('id', bookingIds);
-  if (bookingError) return paymentRows;
-
-  const customers = new Map((bookings ?? []).map((booking: { id: string; full_name: string | null; email: string | null }) => [booking.id, `${booking.full_name || 'Guest booking'}|${booking.email || ''}`]));
-  return paymentRows.map((payment) => ({
-    ...payment,
-    customer_name: customers.get(payment.booking_id)?.split('|')[0] || null,
-    customer_email: payment.customer_email || customers.get(payment.booking_id)?.split('|')[1] || null,
-  }));
+  return adminApiRequest<PaymentRecord[]>('/api/admin/data/payments');
 }
 
 export async function getAdminPaymentsForBookings(bookingIds: string[]): Promise<Record<string, Partial<Record<CurrencyCode, number>>>> {
   if (!bookingIds.length) return {};
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError) throw formatAdminDataError(sessionError);
-  if (!sessionData.session) {
-    throw new Error('No authenticated Supabase session is available for payment history queries.');
-  }
-
-  const { data, error } = await supabase
-    .from('payments')
-    .select('booking_id, amount, currency, status, payment_type')
-    .in('booking_id', bookingIds);
-
-  if (error) {
-    if (isMissingTableError(error)) return {};
-    throw formatAdminDataError(error);
-  }
+  const data = await adminApiRequest<PaymentRecord[]>('/api/admin/data/payments');
 
   const totals: Record<string, Partial<Record<CurrencyCode, number>>> = {};
   (data ?? []).forEach((row: { booking_id?: string; amount?: number | string | null; currency?: string | null; status?: string | null; payment_type?: string | null }) => {
@@ -391,76 +364,19 @@ export async function getAdminPaymentsForBookings(bookingIds: string[]): Promise
 }
 
 export async function getAdminBookingCharges(): Promise<BookingChargeRecord[]> {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError) throw formatAdminDataError(sessionError);
-  if (!sessionData.session) {
-    throw new Error('No authenticated Supabase session is available for the booking charges query.');
-  }
-
-  const { data, error } = await supabase
-    .from('bookings')
-    .select('id, full_name, email, event_date, booking_amount, status')
-    .order('created_at', { ascending: false });
-
-  if (error) throw formatAdminDataError(error);
-  return (data ?? []) as BookingChargeRecord[];
+  return adminApiRequest<BookingChargeRecord[]>('/api/admin/data/bookings');
 }
 
 export async function getAdminEnquiries(): Promise<AdminEnquiryRecord[]> {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError) throw formatAdminDataError(sessionError);
-  if (!sessionData.session) {
-    throw new Error('No authenticated Supabase session is available for the enquiries query.');
-  }
-
-  const { data, error } = await supabase
-    .from('messages')
-    .select('id, full_name, email, phone, subject, message, status, created_at, updated_at')
-    .order('created_at', { ascending: false });
-
-  if (error) throw formatAdminDataError(error);
-  return (data ?? []) as AdminEnquiryRecord[];
+  return adminApiRequest<AdminEnquiryRecord[]>('/api/admin/data/messages');
 }
 
 export async function getAdminServices(): Promise<AdminServiceRecord[]> {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError) throw formatAdminDataError(sessionError);
-  if (!sessionData.session) {
-    throw new Error('No authenticated Supabase session is available for the services query.');
-  }
-
-  const diagnosticsEnabled = import.meta.env.DEV;
-  if (diagnosticsEnabled) {
-    console.groupCollapsed('[D’Fabulous Admin] services query diagnostics');
-    console.log('table:', 'public.services');
-    console.log('authenticated user ID:', sessionData.session.user.id);
-    console.log('columns:', 'id, slug, title, yoruba_name, short_description, full_description, category, icon_name, is_active, display_order');
-    console.log('filters:', { category: 'none in Supabase query', is_active: 'none in admin query' });
-  }
-
-  const { data, error } = await supabase
-    .from('services')
-    .select('id, slug, title, yoruba_name, short_description, full_description, category, icon_name, is_active, display_order')
-    .order('display_order', { ascending: true });
-
-  if (diagnosticsEnabled) {
-    console.log('supabase returned data:', data);
-    console.log('supabase returned error:', error);
-    console.log('row count:', data?.length ?? 0);
-    console.groupEnd();
-  }
-  if (error) throw formatAdminDataError(error);
-  return (data ?? []) as AdminServiceRecord[];
+  return adminApiRequest<AdminServiceRecord[]>('/api/admin/data/services');
 }
 
 export async function getAdminSettings(): Promise<AdminSettingsValues> {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError) throw formatAdminDataError(sessionError);
-  if (!sessionData.session) throw new Error('No authenticated Supabase session is available for settings.');
-
-  const { data, error } = await supabase.from('site_settings').select('key, value');
-  if (error) throw formatAdminDataError(error);
-
+  const data = await adminApiRequest<Array<{ key: string; value: unknown }>>('/api/admin/data/settings');
   const settings: AdminSettingsValues = {};
   (data || []).forEach((row: { key: string; value: unknown }) => {
     if (typeof row.value === 'boolean' || typeof row.value === 'string') settings[row.key] = row.value;
@@ -482,48 +398,24 @@ function mapBlockedDateRow(row: BlockedDateRow): AdminBlockedDateRecord {
 }
 
 export async function getAdminBlockedDates(): Promise<AdminBlockedDateRecord[]> {
-  const { data, error } = await supabase.from('blocked_dates').select('*').order('event_date', { ascending: true });
-  if (error) throw formatAdminDataError(error);
-  return ((data || []) as BlockedDateRow[]).map(mapBlockedDateRow);
+  const data = await adminApiRequest<BlockedDateRow[]>('/api/admin/data/blocked_dates');
+  return data.map(mapBlockedDateRow);
 }
 
 export async function createAdminBlockedDate(blockedDate: string, reason: string): Promise<AdminBlockedDateRecord> {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError) throw formatAdminDataError(sessionError);
-  if (!sessionData.session) throw new Error('Your Supabase session has expired. Please sign in again before blocking a date.');
-
-  const { data, error } = await supabase
-    .from('blocked_dates')
-    .insert({ event_date: blockedDate, note: reason.trim() || null, created_by: sessionData.session.user.id })
-    .select('*')
-    .single();
-
-  if (error) throw formatAdminDataError(error);
-  return mapBlockedDateRow((data || {}) as BlockedDateRow);
+  const data = await adminApiRequest<BlockedDateRow>('/api/admin/blocked-dates', {
+    method: 'POST',
+    body: JSON.stringify({ event_date: blockedDate, note: reason.trim() || null }),
+  });
+  return mapBlockedDateRow(data);
 }
 
 export async function deleteAdminBlockedDate(eventDate: string): Promise<void> {
-  const { error } = await supabase.from('blocked_dates').delete().eq('event_date', eventDate);
-  if (error) throw formatAdminDataError(error);
+  await adminApiRequest(`/api/admin/blocked-dates/${encodeURIComponent(eventDate)}`, { method: 'DELETE' });
 }
 
 export async function saveAdminSettings(values: AdminSettingsValues): Promise<void> {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError) throw formatAdminDataError(sessionError);
-  if (!sessionData.session) throw new Error('Your Supabase session has expired. Please sign in again.');
-
-  const keys = Object.keys(values);
-  const { data: existing, error: readError } = await supabase.from('site_settings').select('key').in('key', keys);
-  if (readError) throw formatAdminDataError(readError);
-  const existingKeys = new Set((existing || []).map((row: { key: string }) => row.key));
-
-  for (const key of keys) {
-    const mutation = existingKeys.has(key)
-      ? supabase.from('site_settings').update({ value: values[key] }).eq('key', key)
-      : supabase.from('site_settings').insert({ key, value: values[key] });
-    const { error } = await mutation;
-    if (error) throw formatAdminDataError(error);
-  }
+  await adminApiRequest('/api/admin/settings', { method: 'PUT', body: JSON.stringify({ values }) });
 }
 
 export async function updateBookingStatus(id: string, status: string): Promise<AdminBookingRecord & { emailWarning?: string }> {
@@ -625,22 +517,10 @@ export async function recordBookingPayment(id: string, payload: { amount: number
 }
 
 export async function updateEnquiryStatus(id: string, status: string): Promise<AdminEnquiryRecord> {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-  if (sessionError) throw formatAdminDataError(sessionError);
-  if (!sessionData.session) {
-    throw new Error('Your Supabase session has expired. Please sign in again before updating an enquiry.');
-  }
-
-  const { data, error } = await supabase
-    .from('messages')
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq('id', id)
-    .select('id, full_name, email, phone, subject, message, status, created_at, updated_at')
-    .maybeSingle();
-
-  if (error) throw formatAdminDataError(error);
-  if (!data) throw new Error(`Supabase did not confirm the enquiry status update for ${id}.`);
-  return data as AdminEnquiryRecord;
+  return adminApiRequest<AdminEnquiryRecord>(`/api/admin/messages/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
 }
 
 export function normalizeStatus(value: string | null | undefined, fallback: string): string {

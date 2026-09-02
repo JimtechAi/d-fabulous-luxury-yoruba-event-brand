@@ -10,7 +10,7 @@ import { Button } from '../components/Button';
 import { SEO } from '../components/SEO';
 import { BRAND_INFO } from '../data/brand';
 import { submitMessage } from '../lib/db';
-import { Mail, Phone, MapPin, Send, CheckCircle2, AlertCircle, MessageSquare, Clock, Globe, Facebook, Instagram, Music2 } from 'lucide-react';
+import { Mail, MessageCircle, MapPin, Send, CheckCircle2, AlertCircle, MessageSquare, Clock, Globe, Facebook, Instagram, Music2 } from 'lucide-react';
 
 const CONTACT_SOCIAL_LINKS = [
   {
@@ -78,10 +78,6 @@ export const ContactShell: React.FC = () => {
       newErrors.email = 'Email address is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Telephone number is required';
     }
 
     if (!formData.message.trim()) {
@@ -154,10 +150,10 @@ export const ContactShell: React.FC = () => {
                   Global Booking Office
                 </span>
                 <h2 className="font-display text-3xl sm:text-4xl font-normal text-black-rich">
-                  Get in Touch
+                  Contact D’Fabulous
                 </h2>
                 <p className="mt-4 text-charcoal-soft/80 leading-relaxed">
-                  Whether planning a traditional Yoruba engagement in London, a high-profile wedding reception, or an international destination celebration, we welcome your enquiry.
+                  WhatsApp us or send us an email. Our team will be happy to assist you.
                 </p>
               </div>
 
@@ -167,20 +163,20 @@ export const ContactShell: React.FC = () => {
                     <Mail className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-burgundy-deep text-sm uppercase tracking-wider">Official Email</h3>
-                    <a href={BRAND_INFO.placeholders.emailUrl} className="block text-sm font-medium text-charcoal-soft mt-1 hover:text-burgundy-deep underline underline-offset-2">{BRAND_INFO.placeholders.email}</a>
+                    <h3 className="font-semibold text-burgundy-deep text-sm uppercase tracking-wider">Email</h3>
+                    <a href={BRAND_INFO.placeholders.emailUrl} className="block text-sm font-medium text-charcoal-soft mt-1 hover:text-burgundy-deep underline underline-offset-2">Send us an Email</a>
+                    <p className="text-xs text-charcoal-soft mt-1">{BRAND_INFO.placeholders.email}</p>
                     <p className="text-xs text-charcoal-soft/60 mt-0.5">Response within 24–48 business hours</p>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-4 p-5 bg-ivory-warm border border-burgundy-deep/15 hover:border-gold-luxury/50 transition-colors duration-300">
                   <div className="p-3 bg-burgundy-deep/10 text-burgundy-deep shrink-0">
-                    <Phone className="w-6 h-6" />
+                    <MessageCircle className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-burgundy-deep text-sm uppercase tracking-wider">Telephone & WhatsApp</h3>
-                    <a href={BRAND_INFO.placeholders.phoneUrl} className="block text-sm font-medium text-charcoal-soft mt-1 hover:text-burgundy-deep underline underline-offset-2">{BRAND_INFO.placeholders.phone}</a>
-                    <a href={BRAND_INFO.placeholders.whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-block text-xs font-medium text-[#128C7E] mt-1 hover:text-[#075E54] underline underline-offset-2">Message on WhatsApp</a>
+                    <h3 className="font-semibold text-burgundy-deep text-sm uppercase tracking-wider">WhatsApp</h3>
+                    <a href={BRAND_INFO.placeholders.whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-medium text-[#128C7E] mt-1 hover:text-[#075E54] underline underline-offset-2">Chat on WhatsApp</a>
                     <p className="text-xs text-charcoal-soft/60 mt-0.5">Available for scheduled consultations</p>
                   </div>
                 </div>
@@ -338,7 +334,7 @@ export const ContactShell: React.FC = () => {
                     {/* Phone */}
                     <div>
                       <label htmlFor="contact_phone" className="block text-xs font-semibold uppercase tracking-wider text-burgundy-rich mb-2">
-                        Telephone / WhatsApp <span className="text-red-500">*</span>
+                        WhatsApp contact number (optional)
                       </label>
                       <input
                         type="tel"
@@ -355,6 +351,7 @@ export const ContactShell: React.FC = () => {
                         }`}
                         placeholder="+44 7123 456789"
                       />
+                      <p className="mt-1 text-xs text-neutral-500">Provide a WhatsApp number if you would like us to contact you on WhatsApp.</p>
                       {errors.phone && <p id="contact_phone-error" className="mt-1 text-xs text-red-500">{errors.phone}</p>}
                     </div>
 
@@ -402,6 +399,9 @@ export const ContactShell: React.FC = () => {
                   </div>
 
                   <div className="pt-2">
+                    <p className="mb-4 text-xs leading-relaxed text-neutral-500">
+                      We use the information you submit to respond to your enquiry and communicate by email or WhatsApp where applicable. Your message is stored in our business system. Read our <a href="/privacy" className="font-medium text-burgundy-rich underline underline-offset-2">Privacy Policy</a>.
+                    </p>
                     <Button
                       type="submit"
                       variant="primary"

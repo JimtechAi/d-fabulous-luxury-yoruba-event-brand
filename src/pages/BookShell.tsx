@@ -51,13 +51,19 @@ export const BookShell: React.FC = () => {
   const [unavailableDates, setUnavailableDates] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    void getEventAvailability()
-      .then((rows) => setUnavailableDates(new Set(
-        rows
-          .filter((row) => row.available === false || row.reason === 'booked' || row.reason === 'owner_blocked')
-          .map((row) => row.event_date.slice(0, 10)),
-      )))
-      .catch(() => undefined);
+    let active = true;
+    getEventAvailability()
+      .then((availability) => {
+        if (!active) return;
+        setUnavailableDates(new Set(availability.filter((item) => !item.available).map((item) => item.event_date.slice(0, 10))));
+      })
+      .catch(() => {
+        // The server still checks date conflicts when the booking is submitted.
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const normalizeDate = (value: string): string => value.slice(0, 10);
@@ -80,10 +86,6 @@ export const BookShell: React.FC = () => {
       newErrors.email = 'Email address is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Telephone / WhatsApp number is required';
     }
 
     const dateError = formData.eventDate ? getDateError(formData.eventDate) : 'Proposed event date is required';
@@ -130,7 +132,14 @@ export const BookShell: React.FC = () => {
     setErrorMessage('');
 
     try {
-      const parsedGuestCount = formData.guestCount ? parseInt(formData.guestCount, 10) : null;
+      const guestCountValues: Record<string, number> = {
+        'under-100': 50,
+        '100-250': 175,
+        '250-500': 375,
+        '500-1000': 750,
+        '1000+': 1000,
+      };
+      const parsedGuestCount = formData.guestCount ? guestCountValues[formData.guestCount] ?? null : null;
       
       const result = await submitBooking({
         full_name: formData.fullName,
@@ -223,11 +232,11 @@ export const BookShell: React.FC = () => {
               <div className="p-6 border border-gold-luxury/30 bg-burgundy-deep text-ivory-warm space-y-3">
                 <h4 className="font-display text-lg font-normal text-gold-luxury">Direct Inquiries</h4>
                 <p className="text-sm text-champagne-soft/85">
-                  Prefer direct communication? You can also reach our booking office via email or phone.
+                  Prefer direct communication? You can also reach our booking office via email or WhatsApp.
                 </p>
                 <div className="text-sm pt-2 space-y-1">
                   <p><span className="text-gold-light">Email:</span> {BRAND_INFO.placeholders.email}</p>
-                  <p><span className="text-gold-light">Phone:</span> {BRAND_INFO.placeholders.phone}</p>
+                  <p><span className="text-gold-light">WhatsApp:</span> <a href={BRAND_INFO.placeholders.whatsappUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">Chat with our booking office</a></p>
                 </div>
               </div>
             </div>
@@ -240,7 +249,7 @@ export const BookShell: React.FC = () => {
                     <CheckCircle2 className="w-10 h-10" />
                   </div>
                   <h3 className="text-2xl font-serif font-bold text-burgundy-rich">
-                    Inquiry Received Successfully
+                    Enquiry Received Successfully
                   </h3>
                   <p className="text-neutral-700 max-w-md mx-auto leading-relaxed">
                     Thank you, <strong className="text-burgundy-rich">{formData.fullName}</strong>. Your event specifications have been recorded. D’Fabulous team will review calendar availability and contact you within 24–48 hours.
@@ -349,7 +358,7 @@ export const BookShell: React.FC = () => {
                     {/* Phone */}
                     <div>
                       <label htmlFor="phone" className="block text-xs font-semibold uppercase tracking-wider text-burgundy-rich mb-2">
-                        Phone / WhatsApp <span className="text-red-500">*</span>
+                        WhatsApp contact number (optional)
                       </label>
                       <input
                         type="tel"
@@ -366,6 +375,7 @@ export const BookShell: React.FC = () => {
                         }`}
                         placeholder="+44 7123 456789"
                       />
+                      <p className="mt-1 text-xs text-neutral-500">Provide a WhatsApp number if you would like us to contact you on WhatsApp.</p>
                       {errors.phone && <p id="phone-error" className="mt-1 text-xs text-red-500">{errors.phone}</p>}
                     </div>
 
@@ -491,6 +501,9 @@ export const BookShell: React.FC = () => {
 
                   {/* Submit Button */}
                   <div className="pt-2">
+                    <p className="mb-4 text-xs leading-relaxed text-neutral-500">
+                      We use the information you submit to respond to your booking enquiry, manage the enquiry or booking, and communicate by email or WhatsApp where applicable. Your information is stored in our business system. Read our <a href="/privacy" className="font-medium text-burgundy-rich underline underline-offset-2">Privacy Policy</a>.
+                    </p>
                     <Button
                       type="submit"
                       variant="primary"

@@ -56,6 +56,12 @@ const AboutShell = lazy(() => import('./pages/AboutShell').then((module) => ({ d
 const ExperienceShell = lazy(() => import('./pages/ExperienceShell').then((module) => ({ default: module.ExperienceShell })));
 const TestimonialsShell = lazy(() => import('./pages/TestimonialsShell').then((module) => ({ default: module.TestimonialsShell })));
 const FaqShell = lazy(() => import('./pages/FaqShell').then((module) => ({ default: module.FaqShell })));
+const PrivacyPolicyShell = lazy(() => import('./pages/PrivacyPolicyShell').then((module) => ({ default: module.PrivacyPolicyShell })));
+const CookiePolicyShell = lazy(() => import('./pages/CookiePolicyShell').then((module) => ({ default: module.CookiePolicyShell })));
+const CancellationRefundReschedulingShell = lazy(() => import('./pages/CancellationRefundReschedulingShell').then((module) => ({ default: module.CancellationRefundReschedulingShell })));
+const TermsOfServiceShell = lazy(() => import('./pages/TermsOfServiceShell').then((module) => ({ default: module.TermsOfServiceShell })));
+const BookingTermsShell = lazy(() => import('./pages/BookingTermsShell').then((module) => ({ default: module.BookingTermsShell })));
+const AccessibilityStatementShell = lazy(() => import('./pages/AccessibilityStatementShell').then((module) => ({ default: module.AccessibilityStatementShell })));
 const GenericPageShell = lazy(() => import('./pages/GenericPageShell').then((module) => ({ default: module.GenericPageShell })));
 const NotFoundShell = lazy(() => import('./pages/NotFoundShell').then((module) => ({ default: module.NotFoundShell })));
 const AdminLoginShell = lazy(() => import('./pages/AdminLoginShell').then((module) => ({ default: module.AdminLoginShell })));
@@ -67,6 +73,7 @@ const AdminEnquiriesShell = lazy(() => import('./pages/AdminEnquiriesShell').the
 const AdminCustomersShell = lazy(() => import('./pages/AdminCustomersShell').then((module) => ({ default: module.AdminCustomersShell })));
 const AdminServicesShell = lazy(() => import('./pages/AdminServicesShell').then((module) => ({ default: module.AdminServicesShell })));
 const AdminSettingsShell = lazy(() => import('./pages/AdminSettingsShell').then((module) => ({ default: module.AdminSettingsShell })));
+const AdminUsersShell = lazy(() => import('./pages/AdminUsersShell').then((module) => ({ default: module.AdminUsersShell })));
 const AdminSectionShell = lazy(() => import('./pages/AdminSectionShell').then((module) => ({ default: module.AdminSectionShell })));
 const AdminResetPasswordShell = lazy(() => import('./pages/AdminResetPasswordShell').then((module) => ({ default: module.AdminResetPasswordShell })));
 
@@ -110,6 +117,18 @@ const AppContent: React.FC = () => {
       case '/faq':
       case '/experience/faq':
         return <FaqShell />;
+      case '/privacy':
+        return <PrivacyPolicyShell />;
+      case '/cookies':
+        return <CookiePolicyShell />;
+      case '/cancellation-refund-rescheduling':
+        return <CancellationRefundReschedulingShell />;
+      case '/terms':
+        return <TermsOfServiceShell />;
+      case '/booking-terms':
+        return <BookingTermsShell />;
+      case '/accessibility':
+        return <AccessibilityStatementShell />;
       case '/services/alaga-iduro':
       case '/services/alaga-ijoko':
       case '/services/wedding-mc':
@@ -119,11 +138,6 @@ const AppContent: React.FC = () => {
       case '/services/brand-influencing':
       case '/services/destination-events':
       case '/destination-events':
-      case '/privacy':
-      case '/cookies':
-      case '/terms':
-      case '/booking-terms':
-      case '/accessibility':
         return <GenericPageShell path={currentPath} />;
       default:
         return <NotFoundShell />;
@@ -155,6 +169,8 @@ const AppContent: React.FC = () => {
       adminContent = <AdminServicesShell />;
     } else if (currentPath === '/admin/settings') {
       adminContent = <AdminSettingsShell />;
+    } else if (currentPath === '/admin/users') {
+      adminContent = <AdminUsersShell />;
     }
 
     return <Suspense fallback={<RouteLoading />}><AdminRouteGuard>{adminContent}</AdminRouteGuard></Suspense>;

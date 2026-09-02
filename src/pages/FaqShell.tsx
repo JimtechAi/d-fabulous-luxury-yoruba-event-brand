@@ -91,7 +91,7 @@ export const FaqShell: React.FC = () => {
         <ol className="list-decimal pl-5 space-y-1">
           <li><strong>Initial Inquiry</strong>: Submit your event details via our official <a href="/book" className="text-burgundy-rich font-medium underline">/book</a> form or <a href="/contact" className="text-burgundy-rich font-medium underline">/contact</a> page.</li>
           <li><strong>Date & Service Verification</strong>: D’Fabulous team reviews availability and sends a tailored proposal.</li>
-          <li><strong>Consultation Call</strong>: A dedicated phone or video consultation is scheduled to discuss family protocols, event timings, and cultural preferences.</li>
+          <li><strong>Consultation</strong>: A dedicated video consultation is scheduled to discuss family protocols, event timings, and cultural preferences.</li>
           <li><strong>Formal Reservation</strong>: Date is locked in upon agreement and receipt of the formal deposit.</li>
         </ol>
       ),

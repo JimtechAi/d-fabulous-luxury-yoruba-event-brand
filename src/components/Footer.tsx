@@ -62,7 +62,7 @@ export const Footer: React.FC = () => {
           {/* Col 1: Brand Info */}
           <div>
             <img
-              src="/assets/brand/favicon/favicon.jpeg"
+              src="/assets/brand/favicon/favicon.png"
               alt="D’Fabulous official logo"
               className="h-16 sm:h-20 w-auto max-w-[240px] object-contain mb-4 select-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.28)]"
             />
@@ -149,9 +149,8 @@ export const Footer: React.FC = () => {
                 <a href={BRAND_INFO.placeholders.emailUrl} className="font-mono text-[11px] hover:text-gold-luxury transition-colors">{BRAND_INFO.placeholders.email}</a>
               </div>
               <div>
-                <span className="block text-[10px] text-gold-luxury/70 uppercase font-sans">Direct Line:</span>
-                <a href={BRAND_INFO.placeholders.phoneUrl} className="font-mono text-[11px] hover:text-gold-luxury transition-colors">{BRAND_INFO.placeholders.phone}</a>
-                <a href={BRAND_INFO.placeholders.whatsappUrl} target="_blank" rel="noopener noreferrer" className="block text-[11px] text-[#25D366] hover:text-[#7CFFAA] transition-colors">WhatsApp</a>
+                <span className="block text-[10px] text-gold-luxury/70 uppercase font-sans">WhatsApp Enquiries:</span>
+                <a href={BRAND_INFO.placeholders.whatsappUrl} target="_blank" rel="noopener noreferrer" className="font-mono text-[11px] text-[#25D366] hover:text-[#7CFFAA] transition-colors">Chat on WhatsApp</a>
               </div>
 
               <div className="pt-2">
@@ -193,6 +192,9 @@ export const Footer: React.FC = () => {
             </Link>
             <Link href="/booking-terms" className="hover:text-gold-luxury transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold-luxury">
               Booking Terms
+            </Link>
+            <Link href="/cancellation-refund-rescheduling" className="hover:text-gold-luxury transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold-luxury">
+              Cancellation & Refunds
             </Link>
             <Link href="/accessibility" className="hover:text-gold-luxury transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gold-luxury">
               Accessibility

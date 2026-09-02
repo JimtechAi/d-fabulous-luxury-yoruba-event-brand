@@ -20,8 +20,8 @@ import {
 import { Container } from '../components/Container';
 import { Button } from '../components/Button';
 import { AdminProfile, getCurrentAdmin, signOut } from '../lib/auth';
+import { getAdminBookings, getAdminEnquiries } from '../lib/admin';
 import { useRouter } from '../lib/router';
-import { supabase } from '../lib/supabase';
 
 interface DashboardBooking {
   id: string;
@@ -58,6 +58,7 @@ const navItems = [
   { label: 'Services', value: 'services', icon: Sparkles },
   { label: 'Payments', value: 'payments', icon: CreditCard },
   { label: 'Settings', value: 'settings', icon: Settings },
+  { label: 'User Management', value: 'users', icon: Users },
 ] as const;
 
 const statusStyles: Record<string, string> = {
@@ -112,7 +113,7 @@ export const AdminDashboardShell: React.FC = () => {
   const [enquiries, setEnquiries] = useState<DashboardEnquiry[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
-  const [activePanel, setActivePanel] = useState<'dashboard' | 'bookings' | 'payments' | 'calendar' | 'enquiries' | 'customers' | 'services' | 'settings'>('dashboard');
+  const [activePanel, setActivePanel] = useState<'dashboard' | 'bookings' | 'payments' | 'calendar' | 'enquiries' | 'customers' | 'services' | 'settings' | 'users'>('dashboard');
 
   const handlePanelNavigation = (panel: typeof activePanel) => {
     setActivePanel(panel);
@@ -146,6 +147,10 @@ export const AdminDashboardShell: React.FC = () => {
     }
     if (panel === 'settings') {
       navigate('/admin/settings');
+      return;
+    }
+    if (panel === 'users') {
+      navigate('/admin/users');
     }
   };
 
@@ -179,23 +184,14 @@ export const AdminDashboardShell: React.FC = () => {
 
       try {
         const [bookingsResult, enquiriesResult] = await withTimeout(
-          Promise.all([
-            supabase.from('bookings').select('id, user_id, full_name, email, phone, event_date, event_location, services_requested, estimated_guest_count, celebration_details, status, created_at, updated_at').order('created_at', { ascending: false }),
-            supabase.from('messages').select('id, full_name, email, phone, subject, message, status, created_at, updated_at').order('created_at', { ascending: false }),
-          ]),
+          Promise.all([getAdminBookings(), getAdminEnquiries()]),
           'The dashboard data request timed out. Check the Supabase connection and try again.',
         );
 
         if (!isMounted) return;
 
-        if (bookingsResult.error || enquiriesResult.error) {
-          const bookingError = bookingsResult.error ? bookingsResult.error.message : '';
-          const enquiryError = enquiriesResult.error ? enquiriesResult.error.message : '';
-          throw new Error(bookingError || enquiryError || 'The dashboard data could not be loaded right now.');
-        }
-
-        setBookings((bookingsResult.data || []) as DashboardBooking[]);
-        setEnquiries((enquiriesResult.data || []) as DashboardEnquiry[]);
+        setBookings((bookingsResult || []).map((booking) => ({ ...booking, user_id: null })) as DashboardBooking[]);
+        setEnquiries((enquiriesResult || []) as DashboardEnquiry[]);
       } catch (error) {
         if (!isMounted) return;
         setErrorMessage(error instanceof Error ? error.message : 'The dashboard data could not be loaded right now.');
@@ -278,9 +274,12 @@ export const AdminDashboardShell: React.FC = () => {
     <main className="min-h-screen bg-ivory-warm text-black-rich">
       <header className="bg-burgundy-dark text-ivory-warm border-b border-gold-luxury/30">
         <Container className="flex items-center justify-between gap-6 py-5">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-gold-luxury">Private Administration</p>
-            <h1 className="font-display text-3xl">D’Fabulous Admin</h1>
+          <div className="flex items-center gap-4">
+            <img src="/assets/brand/logo/dfabulous-logo.png" alt="D’Fabulous official logo" className="h-14 w-auto max-w-[200px] object-contain" />
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-gold-luxury">Private Administration</p>
+              <h1 className="font-display text-3xl">D’Fabulous Admin</h1>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden sm:block text-right">

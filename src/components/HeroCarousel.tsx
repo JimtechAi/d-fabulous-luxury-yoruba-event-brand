@@ -8,6 +8,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Container } from './Container';
 import { Link } from '../lib/router';
+import { getResponsiveImageProps } from '../lib/media';
 
 interface HeroSlide {
   image: string;
@@ -164,6 +165,7 @@ export const HeroCarousel: React.FC = () => {
           >
             <img
               src={slide.image}
+              {...getResponsiveImageProps(slide.image, '(max-width: 767px) 100vw, 100vw')}
               alt={slide.alt}
               loading={index === 0 ? 'eager' : 'lazy'}
               decoding={index === 0 ? 'sync' : 'async'}

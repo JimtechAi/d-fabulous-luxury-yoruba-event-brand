@@ -82,7 +82,6 @@ export const SEO: React.FC<PageMetaProps> = ({
       "description": BRAND_INFO.positioning,
       "url": window.location.origin,
       "email": BRAND_INFO.placeholders.email,
-      "telephone": BRAND_INFO.placeholders.phone,
       "areaServed": ["United Kingdom", "Europe", "Nigeria", "International destinations"],
       "knowsLanguage": ["English", "Yoruba"],
     };
