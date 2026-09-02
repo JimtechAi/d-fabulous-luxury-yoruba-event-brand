@@ -38,7 +38,6 @@ Optional server-only integrations:
 - `RESEND_API_KEY`
 - `RESEND_FROM_EMAIL` (keep `D'Fabulous Events <onboarding@resend.dev>` during development; replace only this value with a verified D’Fabulous sender later)
 - `RESEND_NOTIFICATION_EMAIL`
-- `GEMINI_API_KEY` (only for future server-side Gemini features)
 - `CORS_ALLOWED_ORIGINS` (server-only comma-separated frontend origins, for example `https://dfabulous.co.uk`)
 
 The Supabase anon key is a public client key and must still be protected by the database RLS policies. Never place a Supabase service-role key in a `VITE_` variable.
@@ -62,7 +61,7 @@ The production architecture is split: deploy the Vite frontend to Vercel and hos
 
 Do not deploy the static Vite output alone if booking and contact submissions are required. The Express backend remains responsible for API validation, rate limiting, Supabase service-role operations, email notifications, and admin API access.
 
-The repository contains Supabase security migrations under `08 Development/`. Apply and verify `security_remediation_migration.sql`, `20260818_payments_rls_hardening.sql`, `20260819_public_data_access_hardening.sql`, and `20260819_submission_service_role_privileges.sql` in that order before exposing administrative data or accepting public submissions.
+The repository contains Supabase security migrations under `08 Development/`. Apply and verify `security_remediation_migration.sql`, `20260818_payments_rls_hardening.sql`, `20260819_public_data_access_hardening.sql`, `20260819_submission_service_role_privileges.sql`, and `20260902_booking_phone_nullable.sql` before exposing administrative data or accepting public submissions.
 
 ## Admin password recovery
 
