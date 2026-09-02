@@ -1,5 +1,6 @@
 import { Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
+import { apiUrl } from './db';
 
 export type AdminRole = 'owner' | 'admin' | 'staff' | 'viewer';
 
@@ -45,7 +46,7 @@ export async function getCurrentAdmin(currentSession?: Session | null): Promise<
     return { session: null, profile: null, authorized: false };
   }
 
-  const response = await fetch('/api/admin/session', {
+  const response = await fetch(apiUrl('/api/admin/session'), {
     headers: { Authorization: `Bearer ${session.access_token}` },
   });
   const result = await response.json().catch(() => null);
