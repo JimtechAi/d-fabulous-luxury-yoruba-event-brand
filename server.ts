@@ -709,6 +709,42 @@ async function startServer() {
     });
   });
 
+  app.get('/api/availability', async (req, res) => {
+    if (!isServerDatabaseConfigured) {
+      res.status(503).json({ success: false, error: 'Database Configuration Error' });
+      return;
+    }
+
+    const startDate = isValidDate(req.query.start) ? req.query.start : new Date().toISOString().slice(0, 10);
+    const endDate = isValidDate(req.query.end) ? req.query.end : (() => {
+      const date = new Date(`${startDate}T00:00:00Z`);
+      date.setUTCFullYear(date.getUTCFullYear() + 2);
+      return date.toISOString().slice(0, 10);
+    })();
+
+    try {
+      const [{ data: bookings, error: bookingsError }, { data: blockedDates, error: blockedDatesError }] = await Promise.all([
+        serverDatabase.from('bookings').select('event_date,status').in('status', ['pending', 'confirmed']).gte('event_date', startDate).lte('event_date', endDate),
+        serverDatabase.from('blocked_dates').select('blocked_date').gte('blocked_date', startDate).lte('blocked_date', endDate),
+      ]);
+
+      if (bookingsError) throw bookingsError;
+      if (blockedDatesError) throw blockedDatesError;
+
+      const unavailable = new Map<string, 'booked' | 'owner_blocked'>();
+      (bookings || []).forEach((booking) => unavailable.set(booking.event_date, 'booked'));
+      (blockedDates || []).forEach((date) => unavailable.set(date.blocked_date, 'owner_blocked'));
+
+      res.json({
+        success: true,
+        data: Array.from(unavailable, ([event_date, reason]) => ({ event_date, available: false, reason })),
+      });
+    } catch (error) {
+      console.error('[Server API] Availability read error:', error);
+      res.status(500).json({ success: false, error: 'Database Operation Error', details: 'Unable to load event availability.' });
+    }
+  });
+
   // Submit Booking Endpoint
   app.post('/api/bookings', submissionRateLimit, async (req, res) => {
     if (!isServerDatabaseConfigured) {

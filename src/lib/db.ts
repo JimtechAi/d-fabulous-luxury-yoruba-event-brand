@@ -3,8 +3,9 @@ import { SERVICES_LIST } from '../data/brand';
 import { ServiceDefinition } from '../types';
 
 const productionApiBaseUrl = 'https://d-fabulous-luxury-yoruba-event-brand-1.onrender.com';
+const isLocalDevelopmentHost = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? productionApiBaseUrl : ''))
+export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD && !isLocalDevelopmentHost ? productionApiBaseUrl : ''))
   .trim()
   .replace(/\/+$/, '');
 
@@ -15,7 +16,7 @@ export function apiUrl(path: string): string {
 export interface BookingSubmission {
   full_name: string;
   email: string;
-  phone: string;
+  phone?: string;
   event_date: string;
   event_location: string;
   services_requested: string[];
@@ -48,12 +49,12 @@ export async function getEventAvailability(): Promise<EventAvailabilityRecord[]>
   const start = getLocalDateString();
   const endDate = new Date();
   endDate.setFullYear(endDate.getFullYear() + 2);
-  const { data, error } = await supabase.rpc('get_event_availability', {
-    p_start_date: start,
-    p_end_date: getLocalDateString(endDate),
-  });
-  if (error) throw error;
-  return (data || []) as EventAvailabilityRecord[];
+  const response = await fetch(apiUrl(`/api/availability?start=${start}&end=${getLocalDateString(endDate)}`));
+  const result = await response.json().catch(() => null);
+  if (!response.ok || !result?.success) {
+    throw new Error(result?.details || result?.error || 'Unable to load event availability.');
+  }
+  return (result.data || []) as EventAvailabilityRecord[];
 }
 
 export interface DbService {
@@ -112,7 +113,7 @@ export function normalizeGalleryImageUrl(imageUrl: string): string {
 }
 
 const LOCAL_GALLERY_ITEMS: DbGalleryItem[] = Array.from({ length: 76 }, (_, index) => {
-  const filename = `image${index + 1}.webp.jpeg`;
+  const filename = `image${index + 1}.webp`;
   return {
     id: `local-gallery-${index + 1}`,
     title: `Image ${index + 1}`,
@@ -127,7 +128,7 @@ const LOCAL_GALLERY_ITEMS: DbGalleryItem[] = Array.from({ length: 76 }, (_, inde
 });
 
 const LOCAL_VIDEO_ITEMS: DbVideoItem[] = Array.from({ length: 33 }, (_, index) => {
-  const filename = `video${index + 1}.webp.mp4`;
+  const filename = `video${index + 1}.mp4`;
   return {
     id: `local-video-${index + 1}`,
     title: `Video ${index + 1}`,
@@ -261,6 +262,11 @@ export async function submitBooking(data: BookingSubmission): Promise<{ success:
         error: `${result.error || 'Submission Error'}: ${result.details || 'Unable to record booking.'}`,
       };
     }
+
+    return {
+      success: false,
+      error: `Booking service returned HTTP ${response.status}. Please try again shortly.`,
+    };
   } catch (error: unknown) {
     console.error('Booking server request error:', error);
     return {
@@ -402,52 +408,9 @@ export async function getTestimonials(): Promise<DbTestimonial[]> {
       return result.data as DbTestimonial[];
     }
   } catch {
-    // Fallback
-  }
-
-  if (!isSupabaseConfigured) return [];
-
-  try {
-    const { data, error } = await supabase
-      .from('testimonials')
-      .select('*')
-      .eq('is_featured', true)
-      .order('display_order', { ascending: true });
-
-    if (error || !data) return [];
-    return data as DbTestimonial[];
-  } catch {
     return [];
   }
+
+  return [];
 }
 
-/**
- * Fetches site settings key-value entries.
- */
-export async function getSiteSettings(): Promise<Record<string, unknown>> {
-  try {
-    const response = await fetch(apiUrl('/api/settings'));
-    const result = await response.json();
-    if (result?.success && result.data) {
-      return result.data as Record<string, unknown>;
-    }
-  } catch {
-    // Fallback to client call
-  }
-
-  if (!isSupabaseConfigured) return {};
-
-  try {
-    const { data, error } = await supabase.from('site_settings').select('key, value');
-    if (error || !data) return {};
-
-    const settingsMap: Record<string, unknown> = {};
-    data.forEach((row: { key: string; value: unknown }) => {
-      settingsMap[row.key] = row.value;
-    });
-
-    return settingsMap;
-  } catch {
-    return {};
-  }
-}
