@@ -20,7 +20,7 @@ npm install
 npm run dev
 ```
 
-The development server starts on port `3001` and fails clearly if that port is already occupied.
+The development server starts on port `3000` and fails clearly if that port is already occupied.
 
 ## Environment
 
@@ -67,7 +67,7 @@ The repository contains Supabase security migrations under `08 Development/`. Ap
 
 The admin login page sends Supabase recovery emails to `/admin/reset-password` using the current origin. Add these URLs under Supabase Authentication > URL Configuration:
 
-- `http://localhost:3001/admin/reset-password`
+- `http://localhost:3000/admin/reset-password`
 - `https://dfabulous.co.uk/admin/reset-password`
 
 Keep the Supabase recovery email template based on `{{ .ConfirmationURL }}`. Do not replace it with a hard-coded URL. Add the production URL only after confirming the live domain.

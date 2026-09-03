@@ -82,7 +82,7 @@ export const AdminLoginShell: React.FC = () => {
     setState('resetting');
     setErrorMessage('');
 
-    const appUrl = (import.meta.env.VITE_APP_URL || window.location.origin || 'http://localhost:3001').replace(/\/+$/, '');
+    const appUrl = (import.meta.env.VITE_APP_URL || window.location.origin || 'http://localhost:3000').replace(/\/+$/, '');
     const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
       redirectTo: `${appUrl}/admin/reset-password`,
     });

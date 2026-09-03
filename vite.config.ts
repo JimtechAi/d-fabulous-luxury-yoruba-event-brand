@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
     ''
   ).trim().replace(/^["']|["']$/g, '');
 
-  const appUrl = (env.VITE_APP_URL || 'http://localhost:3001').trim().replace(/^['"]|['"]$/g, '').replace(/\/+$/, '');
+  const appUrl = (env.VITE_APP_URL || 'http://localhost:3000').trim().replace(/^['"]|['"]$/g, '').replace(/\/+$/, '');
   const apiBaseUrl = (env.VITE_API_BASE_URL || '').trim().replace(/^['"]|['"]$/g, '').replace(/\/+$/, '');
   const disableWatchers = env.DISABLE_HMR === 'true' || process.platform === 'win32';
 
@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       host: 'localhost',
-      port: 3001,
+      port: 3000,
       strictPort: true,
       // HMR and file watching are disabled on Windows because some media files can lock the watcher
       // and trigger EBUSY errors during dev startup.
