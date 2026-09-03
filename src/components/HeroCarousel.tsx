@@ -219,9 +219,15 @@ export const HeroCarousel: React.FC = () => {
                   {slide.eyebrow}
                 </span>
 
-                <h1 className="mb-6 font-display text-4xl font-normal leading-[1.08] tracking-tight text-ivory-warm sm:text-5xl md:text-6xl lg:text-[4.25rem]">
-                  {slide.headline}
-                </h1>
+                {isActive ? (
+                  <h1 className="mb-6 font-display text-4xl font-normal leading-[1.08] tracking-tight text-ivory-warm sm:text-5xl md:text-6xl lg:text-[4.25rem]">
+                    {slide.headline}
+                  </h1>
+                ) : (
+                  <h2 className="mb-6 font-display text-4xl font-normal leading-[1.08] tracking-tight text-ivory-warm sm:text-5xl md:text-6xl lg:text-[4.25rem]">
+                    {slide.headline}
+                  </h2>
+                )}
 
                 <p className="mb-9 max-w-2xl font-sans text-base font-light leading-relaxed text-champagne-soft/90 sm:text-lg">
                   {slide.supporting}
