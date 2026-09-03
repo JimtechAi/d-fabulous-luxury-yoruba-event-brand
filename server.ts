@@ -725,7 +725,7 @@ async function startServer() {
     try {
       const [{ data: bookings, error: bookingsError }, { data: blockedDates, error: blockedDatesError }] = await Promise.all([
         serverDatabase.from('bookings').select('event_date,status').in('status', ['pending', 'confirmed']).gte('event_date', startDate).lte('event_date', endDate),
-        serverDatabase.from('blocked_dates').select('blocked_date').gte('blocked_date', startDate).lte('blocked_date', endDate),
+        serverDatabase.from('blocked_dates').select('event_date').gte('event_date', startDate).lte('event_date', endDate),
       ]);
 
       if (bookingsError) throw bookingsError;
@@ -733,7 +733,7 @@ async function startServer() {
 
       const unavailable = new Map<string, 'booked' | 'owner_blocked'>();
       (bookings || []).forEach((booking) => unavailable.set(booking.event_date, 'booked'));
-      (blockedDates || []).forEach((date) => unavailable.set(date.blocked_date, 'owner_blocked'));
+      (blockedDates || []).forEach((date) => unavailable.set(date.event_date, 'owner_blocked'));
 
       res.json({
         success: true,
