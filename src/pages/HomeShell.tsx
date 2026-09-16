@@ -16,7 +16,7 @@ import { TestimonialCard } from '../components/TestimonialCard';
 import { FaqAccordion, FaqItem } from '../components/FaqAccordion';
 import { SERVICES_LIST } from '../data/brand';
 import { getGalleryItems, getTestimonials, DbGalleryItem, DbTestimonial } from '../lib/db';
-import { Award, Globe, ShieldCheck, Crown, Sparkles } from 'lucide-react';
+import { Award, Globe, ShieldCheck, Crown, Sparkles, Play } from 'lucide-react';
 
 export const HomeShell: React.FC = () => {
   const [dbGallery, setDbGallery] = useState<DbGalleryItem[]>([]);
@@ -236,7 +236,7 @@ export const HomeShell: React.FC = () => {
             <p className="text-base sm:text-lg text-champagne-soft/85 font-light leading-relaxed mb-8 max-w-2xl mx-auto">
               For couples celebrating across international borders—from European châteaux to tropical destination resorts—D’Fabulous brings seamless Yoruba ceremonial leadership to any location worldwide. Combining international travel capability with uncompromised cultural authenticity.
             </p>
-            <Button variant="primary" size="lg" href="/experience/destination-events">
+            <Button variant="primary" size="lg" href="/services/destination-events">
               DISCOVER DESTINATION SERVICES
             </Button>
           </div>
@@ -250,8 +250,8 @@ export const HomeShell: React.FC = () => {
         <Container>
           <SectionHeading
             eyebrow="CLIENT REFLECTIONS"
-            title="Verified Client Testimonials"
-            description="Reserved for verified reflections from couples, families, and wedding planners who have experienced D’Fabulous."
+            title="Real Stories. Lasting Impressions."
+            description="Authentic client media from D’Fabulous celebrations, presented with sound and playback under your control."
             align="left"
             className="mb-12"
           />
@@ -270,14 +270,35 @@ export const HomeShell: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="rounded-none border border-burgundy-deep/15 bg-white p-8 sm:p-12 text-center shadow-sm">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center border border-gold-luxury/30 bg-ivory-warm text-gold-luxury">
-                <ShieldCheck className="h-7 w-7" />
+            <div className="max-w-5xl mx-auto">
+              <figure className="group relative overflow-hidden rounded-md border border-burgundy-deep/15 bg-black-rich shadow-lg focus-within:ring-2 focus-within:ring-gold-luxury focus-within:ring-offset-2">
+                <div className="relative aspect-video">
+                  <video
+                    className="h-full w-full object-contain"
+                    controls
+                    controlsList="nodownload"
+                    preload="none"
+                    poster="/assets/testimonials/posters/testimonials1.jpg"
+                    playsInline
+                    aria-label="Featured client testimonial video"
+                  >
+                    <source src="/assets/testimonials/testimonials1.webp.mp4" type="video/mp4" />
+                    Your browser does not support the testimonial video.
+                  </video>
+                  <span className="pointer-events-none absolute left-4 top-4 inline-flex items-center gap-2 bg-black-rich/80 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-gold-luxury">
+                    <Play className="h-3 w-3" aria-hidden="true" />
+                    Featured client reflection
+                  </span>
+                </div>
+              </figure>
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+                <p className="text-sm text-charcoal-soft/75">
+                  No verified written testimonial is currently available for display.
+                </p>
+                <Button variant="outline" href="/experience/testimonials">
+                  VIEW ALL CLIENT REFLECTIONS
+                </Button>
               </div>
-              <h3 className="mt-6 font-display text-2xl text-burgundy-deep">Verified client testimonials are being prepared</h3>
-              <p className="mt-3 mx-auto max-w-2xl text-sm leading-relaxed text-charcoal-soft/80">
-                We currently have no published testimonials to display. This page remains intentionally free of fabricated reviews or placeholder client content.
-              </p>
             </div>
           )}
         </Container>
@@ -290,41 +311,40 @@ export const HomeShell: React.FC = () => {
         <Container>
           <SectionHeading
             eyebrow="CREDIBILITY & RECOGNITION"
-            title="Awards, Honors & Media Features"
-            description="Official recognitions and industry honors celebrating excellence in cultural hosting and luxury event direction."
+            title="Recognition of Excellence"
+            description="Recognition of the excellence, professionalism and cultural authenticity behind the D’Fabulous experience."
             align="left"
             className="mb-12"
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
-            <div className="p-8 bg-ivory-warm border border-burgundy-deep/15 text-center flex flex-col items-center justify-center hover:border-gold-luxury/50 transition-colors">
-              <Award className="w-10 h-10 text-gold-luxury mb-4" />
-              <h3 className="font-display text-xl font-normal text-black-rich mb-2">
-                Cultural Host Distinction
-              </h3>
-              <p className="text-xs text-charcoal-soft/70 font-light uppercase tracking-wider font-mono">
-                Client-Verified Recognition
+          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-12 lg:gap-16">
+            <figure className="group overflow-hidden rounded-md border border-burgundy-deep/15 bg-white shadow-sm transition-shadow duration-300 hover:shadow-lg lg:col-span-7 focus-within:ring-2 focus-within:ring-gold-luxury focus-within:ring-offset-2">
+              <a
+                href="/assets/award/award-image1.webp.jpeg"
+                target="_blank"
+                rel="noreferrer"
+                className="block focus:outline-none"
+                aria-label="Open D’Fabulous award recognition image"
+              >
+                <img
+                  src="/assets/award/award-image1.webp.jpeg"
+                  alt="D’Fabulous award recognition image"
+                  loading="lazy"
+                  decoding="async"
+                  className="aspect-[4/3] h-full w-full object-contain bg-white transition-transform duration-500 group-hover:scale-[1.01]"
+                />
+              </a>
+            </figure>
+            <div className="space-y-6 lg:col-span-5">
+              <div className="inline-flex bg-burgundy-deep p-4 text-gold-luxury" aria-hidden="true">
+                <Award className="h-8 w-8" />
+              </div>
+              <p className="text-base leading-relaxed text-charcoal-soft/85 sm:text-lg">
+                Recognition of the excellence, professionalism and cultural authenticity behind the D’Fabulous experience.
               </p>
-            </div>
-
-            <div className="p-8 bg-ivory-warm border border-burgundy-deep/15 text-center flex flex-col items-center justify-center hover:border-gold-luxury/50 transition-colors">
-              <Crown className="w-10 h-10 text-gold-luxury mb-4" />
-              <h3 className="font-display text-xl font-normal text-black-rich mb-2">
-                Traditional Ceremonial Honors
-              </h3>
-              <p className="text-xs text-charcoal-soft/70 font-light uppercase tracking-wider font-mono">
-                Shared Upon Confirmation
-              </p>
-            </div>
-
-            <div className="p-8 bg-ivory-warm border border-burgundy-deep/15 text-center flex flex-col items-center justify-center hover:border-gold-luxury/50 transition-colors">
-              <Sparkles className="w-10 h-10 text-gold-luxury mb-4" />
-              <h3 className="font-display text-xl font-medium text-black-rich mb-2">
-                Luxury Event Excellence
-              </h3>
-              <p className="text-xs text-charcoal-soft/70 font-light uppercase tracking-wider font-mono">
-                Published with Consent
-              </p>
+              <Button variant="outline" href="/experience/awards">
+                VIEW AWARDS &amp; RECOGNITION
+              </Button>
             </div>
           </div>
         </Container>

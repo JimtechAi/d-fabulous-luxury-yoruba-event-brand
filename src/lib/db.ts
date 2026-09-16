@@ -2,14 +2,17 @@ import { supabase, isSupabaseConfigured, getSupabaseDiagnostics } from './supaba
 import { SERVICES_LIST } from '../data/brand';
 import { ServiceDefinition } from '../types';
 
-const productionApiBaseUrl = 'https://d-fabulous-luxury-yoruba-event-brand-1.onrender.com';
 const isLocalDevelopmentHost = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
-
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD && !isLocalDevelopmentHost ? productionApiBaseUrl : ''))
+const configuredApiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '')
   .trim()
   .replace(/\/+$/, '');
 
+export const API_BASE_URL = configuredApiBaseUrl;
+
 export function apiUrl(path: string): string {
+  if (import.meta.env.PROD && !isLocalDevelopmentHost && !API_BASE_URL) {
+    throw new Error('VITE_API_BASE_URL is required for production API requests.');
+  }
   return `${API_BASE_URL}${path}`;
 }
 

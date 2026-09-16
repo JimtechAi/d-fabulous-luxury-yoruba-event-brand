@@ -168,6 +168,36 @@ export const AboutShell: React.FC = () => {
         </Container>
       </section>
 
+      {/* Recognition media */}
+      <section className="py-16 sm:py-24 bg-burgundy-dark text-ivory-warm border-y border-gold-luxury/20">
+        <Container>
+          <div className="max-w-3xl mx-auto text-center space-y-3 mb-12">
+            <span className="text-xs font-semibold tracking-[0.25em] text-gold-luxury uppercase block font-sans">
+              RECOGNITION
+            </span>
+            <h2 className="font-display text-3xl sm:text-4xl font-normal text-ivory-warm">
+              Awards & Recognition
+            </h2>
+            <p className="text-champagne-soft/85 leading-relaxed text-sm sm:text-base">
+              Recognition media shared by D’Fabulous, presented without added claims or interpretation.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {[1, 2].map((index) => (
+              <figure key={index} className="border border-gold-luxury/25 bg-white overflow-hidden">
+                <img
+                  src={`/assets/award/award-image${index}.webp.jpeg`}
+                  alt={`D’Fabulous award recognition image ${index}`}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full aspect-[4/3] object-contain"
+                />
+              </figure>
+            ))}
+          </div>
+        </Container>
+      </section>
+
       {/* CTA Section */}
       <section className="py-16 bg-ivory-warm">
         <Container>

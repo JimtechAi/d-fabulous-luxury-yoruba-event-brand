@@ -32,6 +32,9 @@ Required for database-backed functionality:
 - `VITE_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` (server environment only; required for public booking and contact submissions)
 - `VITE_API_BASE_URL` (frontend-safe; leave empty for same-origin local development, set to the separate Express backend URL on Vercel)
+- `VITE_SITE_URL` (canonical production origin, for example `https://dfabulous.co.uk`)
+- `VITE_GA_MEASUREMENT_ID` (optional real Google Analytics 4 measurement ID)
+- `VITE_GOOGLE_SITE_VERIFICATION` (optional Google Search Console HTML verification token)
 
 Optional server-only integrations:
 

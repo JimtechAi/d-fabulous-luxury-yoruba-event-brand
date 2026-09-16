@@ -124,4 +124,5 @@ export interface PageHeroProps {
   breadcrumbs?: BreadcrumbItem[];
   mediaSlot?: React.ReactNode;
   align?: 'left' | 'center';
+  compact?: boolean;
 }

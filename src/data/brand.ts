@@ -116,21 +116,19 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     ]
   },
   {
-    label: "Experience",
-    href: "/experience",
-    children: [
-      { label: "Gallery", href: "/gallery", description: "High-resolution celebration photography" },
-      { label: "Testimonials", href: "/experience/testimonials", description: "Verified client reflections" },
-      { label: "Awards", href: "/experience/awards", description: "Official honors and industry recognitions" },
-      { label: "Destination Events", href: "/experience/destination-events", description: "International celebrations across Europe & worldwide" },
-    ]
-  },
-  {
     label: "Gallery",
     href: "/gallery",
     children: [
       { label: "Gallery", href: "/gallery", description: "High-resolution celebration photography" },
       { label: "Videos", href: "/gallery/videos", description: "Cinematic event highlights & ceremonial media" },
+    ]
+  },
+  {
+    label: "Experience",
+    href: "/experience",
+    children: [
+      { label: "Testimonials", href: "/experience/testimonials", description: "Verified client reflections" },
+      { label: "Awards", href: "/experience/awards", description: "Official honors and industry recognitions" },
     ]
   }
 ];
@@ -152,7 +150,6 @@ export const ALL_ROUTES = [
   { path: "/gallery/videos", title: "Cinematic Highlights | D’Fabulous Yoruba Events", desc: "Watch video highlights of live Alaga Iduro, Alaga Ijoko, and wedding MC hosting at luxury venues across the UK and internationally." },
   { path: "/experience/testimonials", title: "Verified Testimonials | D’Fabulous Client Reflections", desc: "Read verified client reflections from couples, families, and wedding planners who experienced D’Fabulous ceremonial hosting." },
   { path: "/experience/awards", title: "Awards & Recognition | D’Fabulous Cultural Host", desc: "Official recognitions, industry honors, and media features celebrating excellence in Yoruba cultural hosting and event direction." },
-  { path: "/experience/destination-events", title: "Destination Events | D’Fabulous International", desc: "Discover how D’Fabulous executes flawless Yoruba traditional engagement ceremonies across Europe and worldwide destinations." },
   { path: "/contact", title: "Contact & Consultations | D’Fabulous Yoruba Events", desc: "Enquire about date availability, consultation bookings, and bespoke hosting packages for your upcoming celebration." },
   { path: "/book", title: "Reserve Your Event Date | Book D’Fabulous", desc: "Official booking request form for D’Fabulous luxury Yoruba event hosting, Alaga services, and wedding reception direction." },
   { path: "/faq", title: "Frequently Asked Questions | D’Fabulous Yoruba Events", desc: "Find answers to common questions regarding Alaga Iduro vs Alaga Ijoko, wedding MC hosting, international travel, and booking workflows." },

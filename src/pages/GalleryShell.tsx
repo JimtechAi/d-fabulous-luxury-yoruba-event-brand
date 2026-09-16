@@ -30,10 +30,13 @@ function getVideoMimeType(videoUrl: string): string {
   return VIDEO_MIME_TYPES[extension] || 'video/mp4';
 }
 
+const INITIAL_VIDEO_ITEMS = 9;
+
 export const GalleryShell: React.FC<GalleryShellProps> = ({ type = 'gallery' }) => {
   const isVideo = type === 'videos';
   const [dbGallery, setDbGallery] = useState<DbGalleryItem[]>([]);
   const [dbVideos, setDbVideos] = useState<DbVideoItem[]>([]);
+  const [visibleVideoItems, setVisibleVideoItems] = useState(INITIAL_VIDEO_ITEMS);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -51,6 +54,10 @@ export const GalleryShell: React.FC<GalleryShellProps> = ({ type = 'gallery' }) 
       }
     });
   }, [isVideo]);
+
+  useEffect(() => {
+    setVisibleVideoItems(INITIAL_VIDEO_ITEMS);
+  }, [isVideo, dbVideos.length]);
 
   type GalleryDisplayItem = {
     id: string;
@@ -84,6 +91,7 @@ export const GalleryShell: React.FC<GalleryShellProps> = ({ type = 'gallery' }) 
   }));
 
   const items: GalleryDisplayItem[] = isVideo ? videoItems : galleryItems;
+  const visibleItems = isVideo ? items.slice(0, visibleVideoItems) : items;
 
   const selectedItem = selectedIndex !== null ? items[selectedIndex] ?? null : null;
   const itemCount = items.length;
@@ -159,7 +167,7 @@ export const GalleryShell: React.FC<GalleryShellProps> = ({ type = 'gallery' }) 
         <Container>
           {/* Media Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {items.map((item, index) => (
+            {visibleItems.map((item, index) => (
               <GalleryCard
                 key={item.id}
                 imageSrc={item.imageSrc}
@@ -175,6 +183,17 @@ export const GalleryShell: React.FC<GalleryShellProps> = ({ type = 'gallery' }) 
               />
             ))}
           </div>
+
+          {isVideo && visibleVideoItems < items.length && (
+            <div className="mt-10 flex justify-center">
+              <Button
+                variant="outline"
+                onClick={() => setVisibleVideoItems((current) => Math.min(current + INITIAL_VIDEO_ITEMS, items.length))}
+              >
+                LOAD MORE VIDEOS
+              </Button>
+            </div>
+          )}
 
           {selectedItem && (
             <div ref={modalRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black-rich/95 p-4 sm:p-8" role="dialog" aria-modal="true" aria-label={selectedItem.altText} onClick={() => setSelectedIndex(null)}>

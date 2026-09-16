@@ -23,6 +23,9 @@ export default defineConfig(({ mode }) => {
 
   const appUrl = (env.VITE_APP_URL || 'http://localhost:3000').trim().replace(/^['"]|['"]$/g, '').replace(/\/+$/, '');
   const apiBaseUrl = (env.VITE_API_BASE_URL || '').trim().replace(/^['"]|['"]$/g, '').replace(/\/+$/, '');
+  const siteUrl = (env.VITE_SITE_URL || '').trim().replace(/^['"]|['"]$/g, '').replace(/\/+$/, '');
+  const gaMeasurementId = (env.VITE_GA_MEASUREMENT_ID || '').trim().replace(/^['"]|['"]$/g, '');
+  const googleSiteVerification = (env.VITE_GOOGLE_SITE_VERIFICATION || '').trim().replace(/^['"]|['"]$/g, '');
   const disableWatchers = env.DISABLE_HMR === 'true' || process.platform === 'win32';
 
   return {
@@ -32,6 +35,9 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(supabaseAnonKey),
       'import.meta.env.VITE_APP_URL': JSON.stringify(appUrl),
       'import.meta.env.VITE_API_BASE_URL': JSON.stringify(apiBaseUrl),
+      'import.meta.env.VITE_SITE_URL': JSON.stringify(siteUrl),
+      'import.meta.env.VITE_GA_MEASUREMENT_ID': JSON.stringify(gaMeasurementId),
+      'import.meta.env.VITE_GOOGLE_SITE_VERIFICATION': JSON.stringify(googleSiteVerification),
     },
     resolve: {
       alias: {

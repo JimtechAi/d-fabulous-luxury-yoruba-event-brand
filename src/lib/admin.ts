@@ -30,6 +30,8 @@ export interface AdminBookingRecord {
   estimated_guest_count: number | null;
   celebration_details: string | null;
   status: string | null;
+  completed_at?: string | null;
+  archived_at?: string | null;
   payment_totals?: Partial<Record<CurrencyCode, number>>;
   created_at: string | null;
   updated_at: string | null;
@@ -388,7 +390,7 @@ type BlockedDateRow = Record<string, unknown>;
 
 function mapBlockedDateRow(row: BlockedDateRow): AdminBlockedDateRecord {
   return {
-    id: typeof row.id === 'string' ? row.id : null,
+    id: null,
     event_date: typeof row.event_date === 'string' ? row.event_date : String(row.event_date ?? ''),
     note: typeof row.note === 'string' ? row.note : null,
     created_by: typeof row.created_by === 'string' ? row.created_by : null,
@@ -438,6 +440,20 @@ export async function updateBookingStatus(id: string, status: string): Promise<A
     throw new Error(result?.details || result?.error || 'Unable to update booking status.');
   }
   return { ...(result.data as AdminBookingRecord), emailWarning: result.emailWarning };
+}
+
+export async function archiveBooking(id: string): Promise<AdminBookingRecord> {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) throw formatAdminDataError(sessionError);
+  if (!sessionData.session) throw new Error('Your Supabase session has expired. Please sign in again before archiving a booking.');
+
+  const response = await fetch(apiUrl(`/api/bookings/${encodeURIComponent(id)}/archive`), {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
+  });
+  const result = await response.json().catch(() => null);
+  if (!response.ok || !result?.success) throw new Error(result?.details || result?.error || 'Unable to archive the booking.');
+  return result.data as AdminBookingRecord;
 }
 
 export async function updateBookingDetails(id: string, updates: Partial<Pick<AdminBookingRecord, 'event_date' | 'event_location' | 'celebration_details' | 'estimated_guest_count' | 'booking_amount'>> & { currency?: CurrencyCode }): Promise<AdminBookingRecord> {

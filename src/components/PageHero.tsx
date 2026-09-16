@@ -15,13 +15,14 @@ export const PageHero: React.FC<PageHeroProps> = ({
   breadcrumbs = [],
   mediaSlot,
   align = 'left',
+  compact = false,
 }) => {
   const pageBreadcrumbs = breadcrumbs[0]?.label.toLowerCase() === 'home'
     ? breadcrumbs.slice(1)
     : [{ label: 'Home', href: '/' }, ...breadcrumbs];
 
   return (
-    <div className="relative bg-burgundy-dark text-ivory-warm pt-32 pb-20 sm:pt-40 sm:pb-28 border-b border-gold-luxury/20 overflow-hidden">
+    <div className={`relative bg-burgundy-dark text-ivory-warm border-b border-gold-luxury/20 overflow-hidden ${compact ? 'pt-28 pb-16 sm:pt-32 sm:pb-20' : 'pt-32 pb-20 sm:pt-40 sm:pb-28'}`}>
       {/* Background Cultural Accent Pattern */}
       <div className="absolute inset-0 cultural-pattern-subtle pointer-events-none" aria-hidden="true" />
 

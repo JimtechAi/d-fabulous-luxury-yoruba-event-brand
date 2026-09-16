@@ -4,6 +4,7 @@ import { Container } from '../components/Container';
 import { Button } from '../components/Button';
 import { AdminBackToDashboard } from '../components/AdminBackToDashboard';
 import { AdminProfile, getCurrentAdmin, signOut } from '../lib/auth';
+import { apiUrl } from '../lib/db';
 import { useRouter } from '../lib/router';
 import { supabase } from '../lib/supabase';
 
@@ -63,7 +64,7 @@ export const AdminUsersShell: React.FC = () => {
       return;
     }
 
-    const response = await fetch('/api/admin/users', {
+    const response = await fetch(apiUrl('/api/admin/users'), {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -126,7 +127,7 @@ export const AdminUsersShell: React.FC = () => {
 
     const selectedPermissions = ALL_PERMISSION_KEYS.filter((permission) => permissions[permission]);
 
-    const response = await fetch('/api/admin/users', {
+    const response = await fetch(apiUrl('/api/admin/users'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

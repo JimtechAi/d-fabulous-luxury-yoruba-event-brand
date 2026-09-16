@@ -3,14 +3,14 @@
  * Dedicated page shell for verified client reflections, testimonials, awards, and credibility marks.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Container } from '../components/Container';
 import { PageHero } from '../components/PageHero';
 import { TestimonialCard } from '../components/TestimonialCard';
 import { Button } from '../components/Button';
 import { SEO } from '../components/SEO';
 import { getTestimonials, DbTestimonial } from '../lib/db';
-import { Award, Crown, Sparkles, ShieldCheck, Heart, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Play } from 'lucide-react';
 
 interface TestimonialItem {
   id: string;
@@ -41,33 +41,28 @@ export const TestimonialsShell: React.FC = () => {
     isPlaceholder: t.is_placeholder,
   }));
 
-  const recognitionItems = [
-    {
-      icon: Award,
-      title: 'Cultural Host Distinction',
-      badge: 'Client-Verified Recognition',
-      description: 'Recognition for distinguished Yoruba cultural representation and elegant ceremonial leadership in luxury event environments.',
-    },
-    {
-      icon: Crown,
-      title: 'Traditional Ceremonial Honors',
-      badge: 'Shared Upon Confirmation',
-      description: 'Celebration of expertise in ancestral Yoruba marital protocols, family deference, and ceremonial timing.',
-    },
-    {
-      icon: Sparkles,
-      title: 'Luxury Event Excellence',
-      badge: 'Published with Consent',
-      description: 'Acknowledged for seamless event flow, refined presence, and high-energy reception hosting for discerning families.',
-    },
+  const testimonialVideos = Array.from({ length: 6 }, (_, index) => ({
+    src: `/assets/testimonials/testimonials${index + 1}.webp.mp4`,
+    poster: `/assets/testimonials/posters/testimonials${index + 1}.jpg`,
+  }));
+  const testimonialImages = [
+    '/assets/testimonials/testimonials7.webp.jpeg',
+    '/assets/testimonials/testimonials8.webp.jpeg',
   ];
+  const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
+
+  const pauseOtherVideos = (activeVideo: HTMLVideoElement) => {
+    videoRefs.current.forEach((video) => {
+      if (video && video !== activeVideo) video.pause();
+    });
+  };
 
   return (
     <>
       <SEO
         title="Client Testimonials & Credibility | D’Fabulous Yoruba Events"
         description="Explore verified client reflections, traditional ceremonial honors, and trust standards for D’Fabulous luxury Yoruba event hosting."
-        canonicalUrl={`${window.location.origin}/testimonials`}
+        canonicalUrl={`${window.location.origin}/experience/testimonials`}
       />
 
       <PageHero
@@ -80,23 +75,46 @@ export const TestimonialsShell: React.FC = () => {
         ]}
       />
 
-      {/* Main Testimonials Section */}
-      <section className="py-16 sm:py-24 bg-ivory-warm">
+      {/* Featured testimonial and verified written reflections */}
+      <section className="py-12 sm:py-20 bg-ivory-warm">
         <Container>
-          <div className="max-w-3xl mb-12">
+          <div className="max-w-3xl mb-8">
             <span className="text-xs font-semibold tracking-[0.25em] text-gold-luxury uppercase block mb-3 font-sans">
-              CLIENT TRUST
+              CLIENT TESTIMONIALS
             </span>
             <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-normal text-black-rich">
-              Verified Client Reflections
+              Real Stories. Lasting Impressions.
             </h2>
             <p className="mt-3 text-charcoal-soft/80 leading-relaxed text-sm sm:text-base">
-              To preserve authentic client privacy and complete truthfulness, all reviews below are reserved for verified client submissions following completed events.
+              Authentic client media from D’Fabulous celebrations, presented with sound and playback under your control.
             </p>
           </div>
 
-          {testimonials.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <figure className="group relative mx-auto max-w-5xl overflow-hidden rounded-md border border-burgundy-deep/15 bg-black-rich shadow-lg focus-within:ring-2 focus-within:ring-gold-luxury focus-within:ring-offset-2">
+            <div className="relative aspect-video">
+              <video
+                ref={(video) => { videoRefs.current[0] = video; }}
+                className="h-full w-full object-contain"
+                controls
+                controlsList="nodownload"
+                preload="metadata"
+                poster={testimonialVideos[0].poster}
+                playsInline
+                onPlay={(event) => pauseOtherVideos(event.currentTarget)}
+                aria-label="Featured client testimonial video"
+              >
+                <source src={testimonialVideos[0].src} type="video/mp4" />
+                Your browser does not support the testimonial video.
+              </video>
+              <span className="pointer-events-none absolute left-4 top-4 inline-flex items-center gap-2 bg-black-rich/80 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-gold-luxury">
+                <Play className="h-3 w-3" aria-hidden="true" />
+                Featured client story
+              </span>
+            </div>
+          </figure>
+
+          {testimonials.length > 0 && (
+            <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
               {testimonials.map((t) => (
                 <TestimonialCard
                   key={t.id}
@@ -108,60 +126,84 @@ export const TestimonialsShell: React.FC = () => {
                 />
               ))}
             </div>
-          ) : (
-            <div className="rounded-none border border-burgundy-deep/15 bg-white p-8 sm:p-12 text-center shadow-sm">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center border border-gold-luxury/30 bg-ivory-warm text-gold-luxury">
-                <MessageSquare className="h-7 w-7" />
-              </div>
-              <h3 className="mt-6 font-display text-2xl text-burgundy-deep">Client testimonials will be published here</h3>
-              <p className="mt-3 mx-auto max-w-2xl text-sm leading-relaxed text-charcoal-soft/80">
-                There are no verified reviews available yet. We do not publish placeholder testimonials or fabricated client feedback.
-              </p>
-            </div>
           )}
         </Container>
       </section>
 
-      {/* Credibility & Recognition Section */}
+      {/* Real testimonial media */}
+      <section className="py-16 sm:py-24 bg-burgundy-dark text-ivory-warm">
+        <Container>
+          <div className="max-w-3xl mb-12">
+            <span className="text-xs font-semibold tracking-[0.25em] text-gold-luxury uppercase block mb-3 font-sans">
+              HEARD & SEEN
+            </span>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-normal">
+              Real Celebration Stories
+            </h2>
+            <p className="mt-3 text-champagne-soft/85 leading-relaxed text-sm sm:text-base">
+              A selection of authentic client media from D’Fabulous celebrations. Sound remains user-controlled, with no forced autoplay.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {testimonialVideos.slice(1).map((video, index) => {
+              const videoIndex = index + 1;
+              return (
+              <figure key={video.src} className="group overflow-hidden rounded-md border border-gold-luxury/20 bg-black-rich focus-within:ring-2 focus-within:ring-gold-luxury focus-within:ring-offset-2">
+                <div className="relative aspect-video">
+                  <video
+                    className="h-full w-full object-contain"
+                    controls
+                    controlsList="nodownload"
+                    preload={index === 0 ? 'metadata' : 'none'}
+                    poster={video.poster}
+                    playsInline
+                    ref={(element) => { videoRefs.current[videoIndex] = element; }}
+                    onPlay={(event) => pauseOtherVideos(event.currentTarget)}
+                    aria-label={`Client testimonial video ${videoIndex + 1}`}
+                  >
+                    <source src={video.src} type="video/mp4" />
+                    Your browser does not support the testimonial video.
+                  </video>
+                  <div className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-2 bg-black-rich/80 px-2.5 py-1.5 text-[10px] uppercase tracking-[0.2em] text-gold-luxury">
+                    <Play className="h-3 w-3" aria-hidden="true" />
+                    Client story {videoIndex + 1}
+                  </div>
+                </div>
+              </figure>
+              );
+            })}
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {testimonialImages.map((src, index) => (
+              <figure key={src} className="border border-gold-luxury/20 bg-black-rich overflow-hidden">
+                <img
+                  src={src}
+                  alt={`D’Fabulous client celebration image ${index + 1}`}
+                  loading="lazy"
+                  decoding="async"
+                  className="aspect-[4/3] h-full w-full object-cover"
+                />
+              </figure>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      {/* Verification & Recognition Section */}
       <section className="py-16 sm:py-24 bg-ivory-warm border-y border-burgundy-deep/10">
         <Container>
           <div className="max-w-3xl mb-12 text-center mx-auto space-y-3">
             <span className="text-xs font-semibold tracking-[0.25em] text-gold-luxury uppercase block font-sans">
-              HONORS & RECOGNITION
+              CLIENT INTEGRITY
             </span>
             <h2 className="font-display text-3xl sm:text-4xl font-normal text-black-rich">
-              Ceremonial Excellence & Distinction
+              Authenticity Before Applause
             </h2>
             <p className="text-charcoal-soft/80 text-sm sm:text-base leading-relaxed">
-              Official recognitions celebrating excellence in traditional Yoruba oratory, wedding hosting, and event direction.
+              Written reviews are published only when they are verified and shared with client consent. Our recognition media is presented on the About page without added claims.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {recognitionItems.map((item, idx) => {
-              const IconComp = item.icon;
-              return (
-                <div
-                  key={idx}
-                  className="group p-8 bg-ivory-warm border border-burgundy-deep/15 text-center flex flex-col items-center justify-between space-y-4 hover:border-gold-luxury/50 transition-colors duration-300"
-                >
-                  <div className="p-4 bg-burgundy-deep text-gold-luxury">
-                    <IconComp className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h3 className="font-display text-xl font-normal text-burgundy-deep">
-                      {item.title}
-                    </h3>
-                    <span className="inline-block mt-2 px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-widest text-gold-luxury bg-burgundy-deep/5 border border-burgundy-deep/15">
-                      {item.badge}
-                    </span>
-                    <p className="mt-3 text-xs text-charcoal-soft/80 leading-relaxed">
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
           </div>
         </Container>
       </section>

@@ -13,11 +13,12 @@
  * Express's `express.static(..., { extensions: ['html'] })` resolution, so `/about` resolves
  * to `dist/about.html` on both platforms without any routing/rewrite changes.
  */
+import 'dotenv/config';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import path from 'path';
-import { ALL_ROUTES } from '../src/data/brand';
+import { ALL_ROUTES, BRAND_INFO } from '../src/data/brand';
 
-const SITE_URL = 'https://dfabulous.co.uk';
+const SITE_URL = (process.env.VITE_SITE_URL || 'https://dfabulous.co.uk').trim().replace(/\/+$/, '');
 const DEFAULT_OG_IMAGE = `${SITE_URL}/assets/hero/hero1.webp`;
 const distDir = path.join(process.cwd(), 'dist');
 
@@ -43,6 +44,59 @@ function setOrInsertLink(html: string, rel: string, href: string): string {
   return html.replace('</head>', `    ${tag}\n  </head>`);
 }
 
+function setStructuredData(html: string, route: { path: string; title: string; desc: string }): string {
+  const url = `${SITE_URL}${route.path === '/' ? '' : route.path}`;
+  const segments = route.path.split('/').filter(Boolean);
+  const breadcrumbItems = [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+    ...segments.map((segment, index) => ({
+      '@type': 'ListItem',
+      position: index + 2,
+      name: segment.replace(/-/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()),
+      item: `${SITE_URL}/${segments.slice(0, index + 1).join('/')}`,
+    })),
+  ];
+  const schema = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': ['Organization', 'ProfessionalService'],
+        '@id': `${SITE_URL}/#organization`,
+        name: BRAND_INFO.name,
+        description: BRAND_INFO.positioning,
+        url: SITE_URL,
+        email: BRAND_INFO.placeholders.email,
+        areaServed: ['United Kingdom', 'Europe', 'Nigeria', 'International destinations'],
+        knowsLanguage: ['English', 'Yoruba'],
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${SITE_URL}/#website`,
+        name: BRAND_INFO.name,
+        url: SITE_URL,
+        publisher: { '@id': `${SITE_URL}/#organization` },
+      },
+      {
+        '@type': 'WebPage',
+        '@id': `${url}#webpage`,
+        url,
+        name: route.title,
+        description: route.desc,
+        isPartOf: { '@id': `${SITE_URL}/#website` },
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: breadcrumbItems,
+      },
+    ],
+  };
+  const script = `<script id="json-ld-schema" type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>`;
+  if (/<script id="json-ld-schema"/.test(html)) {
+    return html.replace(/<script id="json-ld-schema"[\s\S]*?<\/script>/, script);
+  }
+  return html.replace('</head>', `    ${script}\n  </head>`);
+}
+
 function buildPageHtml(baseHtml: string, route: { path: string; title: string; desc: string }): string {
   const url = `${SITE_URL}${route.path === '/' ? '' : route.path}`;
   let html = baseHtml;
@@ -57,6 +111,11 @@ function buildPageHtml(baseHtml: string, route: { path: string; title: string; d
   html = setOrInsertMeta(html, 'name', 'twitter:description', route.desc);
   html = setOrInsertMeta(html, 'name', 'twitter:image', DEFAULT_OG_IMAGE);
   html = setOrInsertLink(html, 'canonical', url);
+  const verificationToken = (process.env.VITE_GOOGLE_SITE_VERIFICATION || '').trim();
+  if (verificationToken) {
+    html = setOrInsertMeta(html, 'name', 'google-site-verification', verificationToken);
+  }
+  html = setStructuredData(html, route);
 
   return html;
 }

@@ -82,7 +82,7 @@ const isServerDatabaseConfigured = Boolean(
     supabaseServiceRoleKey
 );
 
-  const publicApiBaseUrl = 'https://d-fabulous-luxury-yoruba-event-brand-1.onrender.com';
+const publicApiBaseUrl = cleanUrl(process.env.VITE_API_BASE_URL);
 
 function formatError(error: any): string {
   if (!error) return 'Unknown server error';
@@ -260,6 +260,15 @@ const submissionWindowMs = 15 * 60 * 1000;
 const submissionLimit = 5;
 const adminStatusAttempts = new Map<string, { count: number; resetAt: number }>();
 const adminStatusLimit = 30;
+const bookingStatusTransitions: Record<string, readonly string[]> = {
+  pending: ['pending', 'confirmed', 'cancelled'],
+  confirmed: ['confirmed', 'deposit paid', 'fully paid', 'completed', 'cancelled'],
+  'deposit paid': ['deposit paid', 'fully paid', 'completed', 'cancelled'],
+  'fully paid': ['fully paid', 'completed', 'cancelled'],
+  completed: ['completed'],
+  cancelled: ['cancelled'],
+  archived: ['archived'],
+};
 const ALL_PERMISSION_KEYS = [
   'bookings.view', 'bookings.manage',
   'messages.view', 'messages.manage',
@@ -885,6 +894,10 @@ async function startServer() {
         res.status(accessCheck.response.status).json(accessCheck.response.json);
         return;
       }
+      if (!accessCheck.adminUser!.isAdmin) {
+        res.status(403).json({ success: false, error: 'Authorization Error', details: 'Only active administrators or the owner can change booking status.' });
+        return;
+      }
       const adminUser = accessCheck.adminUser!;
       const accessToken = req.headers.authorization!.slice(7).trim();
 
@@ -895,7 +908,7 @@ async function startServer() {
 
       const { data: existing, error: readError } = await requestSupabase
         .from('bookings')
-        .select('id, booking_reference, full_name, email, phone, event_date, event_location, services_requested, estimated_guest_count, celebration_details, status, created_at, updated_at')
+        .select('id, booking_reference, full_name, email, phone, event_date, event_location, services_requested, estimated_guest_count, celebration_details, status, completed_at, archived_at, created_at, updated_at')
         .eq('id', bookingId)
         .maybeSingle();
       if (readError) {
@@ -910,17 +923,29 @@ async function startServer() {
 
       const previousStatus = String(existing.status || 'pending').trim().toLowerCase();
       const changed = previousStatus !== requestedStatus;
+      const validTransitions = bookingStatusTransitions[previousStatus] || [];
+      if (!validTransitions.includes(requestedStatus)) {
+        res.status(409).json({
+          success: false,
+          error: 'Invalid Booking Transition',
+          details: `A booking with status "${previousStatus}" cannot be changed to "${requestedStatus}".`,
+        });
+        return;
+      }
       const shouldNotify = changed && (
         (previousStatus === 'pending' && requestedStatus === 'cancelled') ||
         (previousStatus === 'confirmed' && requestedStatus === 'cancelled')
       );
 
+      const statusUpdates: Record<string, string> = { status: requestedStatus, updated_at: new Date().toISOString() };
+      if (requestedStatus === 'completed' && changed) statusUpdates.completed_at = new Date().toISOString();
+
       const { data: updated, error: updateError } = await requestSupabase
         .from('bookings')
-        .update({ status: requestedStatus, updated_at: new Date().toISOString() })
+        .update(statusUpdates)
         .eq('id', bookingId)
         .eq('status', previousStatus)
-        .select('id, booking_reference, full_name, email, phone, event_date, event_location, services_requested, estimated_guest_count, celebration_details, status, created_at, updated_at')
+        .select('id, booking_reference, full_name, email, phone, event_date, event_location, services_requested, estimated_guest_count, celebration_details, status, completed_at, archived_at, created_at, updated_at')
         .maybeSingle();
       if (updateError) {
         console.error('[Server API] Booking status update error:', updateError);
@@ -930,6 +955,15 @@ async function startServer() {
       if (!updated) {
         res.status(409).json({ success: false, error: 'Booking Status Changed', details: 'The booking was changed by another request. Refresh and try again.' });
         return;
+      }
+
+      if (requestedStatus === 'completed' && changed) {
+        await appendAuditLog({
+          actor_user_id: accessCheck.adminUser!.userId,
+          action: 'booking.completed',
+          target_user_id: null,
+          metadata: { booking_reference: updated.booking_reference || null, event_date: updated.event_date || null },
+        });
       }
 
       let emailWarning: string | undefined;
@@ -948,6 +982,71 @@ async function startServer() {
     } catch (error) {
       console.error('[Server API] Unexpected booking status error:', error);
       res.status(500).json({ success: false, error: 'Booking Status Error', details: 'Unable to update the booking status.' });
+    }
+  });
+
+  app.post('/api/bookings/:id/archive', adminStatusRateLimit, async (req, res) => {
+    if (!isSupabaseConfigured) {
+      res.status(503).json({ success: false, error: 'Database Configuration Error' });
+      return;
+    }
+
+    const bookingId = readText(req.params.id, 120);
+    if (!bookingId) {
+      res.status(400).json({ success: false, error: 'Validation Error', details: 'A valid booking ID is required.' });
+      return;
+    }
+
+    try {
+      const accessCheck = await requireAdminAccess(req, ['bookings.manage']);
+      if (accessCheck.response) {
+        res.status(accessCheck.response.status).json(accessCheck.response.json);
+        return;
+      }
+      if (!accessCheck.adminUser!.isAdmin) {
+        res.status(403).json({ success: false, error: 'Authorization Error', details: 'Only active administrators or the owner can archive bookings.' });
+        return;
+      }
+
+      const { data: current, error: readError } = await serverDatabase
+        .from('bookings')
+        .select('id, booking_reference, full_name, event_date, status, completed_at, archived_at')
+        .eq('id', bookingId)
+        .maybeSingle();
+      if (readError) throw readError;
+      if (!current) {
+        res.status(404).json({ success: false, error: 'Booking Not Found' });
+        return;
+      }
+      if (String(current.status).toLowerCase() !== 'completed') {
+        res.status(409).json({ success: false, error: 'Invalid Booking Status', details: 'Only completed bookings can be archived.' });
+        return;
+      }
+
+      const archivedAt = new Date().toISOString();
+      const { data: updated, error: updateError } = await serverDatabase
+        .from('bookings')
+        .update({ status: 'archived', archived_at: archivedAt, updated_at: archivedAt })
+        .eq('id', bookingId)
+        .eq('status', 'completed')
+        .select('id, booking_reference, full_name, email, phone, event_date, event_location, booking_amount, currency, services_requested, estimated_guest_count, celebration_details, status, completed_at, archived_at, created_at, updated_at')
+        .maybeSingle();
+      if (updateError) throw updateError;
+      if (!updated) {
+        res.status(409).json({ success: false, error: 'Booking Status Changed', details: 'The booking changed before it could be archived. Refresh and try again.' });
+        return;
+      }
+
+      await appendAuditLog({
+        actor_user_id: accessCheck.adminUser!.userId,
+        action: 'booking.archived',
+        target_user_id: null,
+        metadata: { booking_reference: updated.booking_reference || null, event_date: updated.event_date || null, archived_at: archivedAt },
+      });
+      res.json({ success: true, data: updated });
+    } catch (error) {
+      console.error('[Server API] Booking archive error:', error);
+      res.status(500).json({ success: false, error: 'Booking Archive Error', details: 'Unable to archive the booking.' });
     }
   });
 
@@ -1021,7 +1120,7 @@ async function startServer() {
         global: { headers: { Authorization: `Bearer ${accessToken}` } },
       });
 
-      const bookingSelect = 'id, booking_reference, full_name, email, phone, event_date, event_location, booking_amount, services_requested, estimated_guest_count, celebration_details, status, created_at, updated_at';
+      const bookingSelect = 'id, booking_reference, full_name, email, phone, event_date, event_location, booking_amount, services_requested, estimated_guest_count, celebration_details, status, completed_at, archived_at, created_at, updated_at';
       let { data: updated, error } = await requestSupabase
         .from('bookings')
         .update(updates)
@@ -1084,6 +1183,10 @@ async function startServer() {
       const accessCheck = await requireAdminAccess(req, ['bookings.manage']);
       if (accessCheck.response) {
         res.status(accessCheck.response.status).json(accessCheck.response.json);
+        return;
+      }
+      if (!accessCheck.adminUser!.isAdmin) {
+        res.status(403).json({ success: false, error: 'Authorization Error', details: 'Only active administrators or the owner can permanently delete bookings.' });
         return;
       }
       const adminUser = accessCheck.adminUser!;
@@ -1558,12 +1661,12 @@ async function startServer() {
     }
 
     const selections: Record<string, string> = {
-      bookings: 'id, booking_reference, full_name, email, phone, event_date, event_location, booking_amount, currency, services_requested, estimated_guest_count, celebration_details, status, created_at, updated_at',
+      bookings: 'id, booking_reference, full_name, email, phone, event_date, event_location, booking_amount, currency, services_requested, estimated_guest_count, celebration_details, status, completed_at, archived_at, created_at, updated_at',
       payments: 'id, booking_id, user_id, amount, currency, payment_type, provider, status, gateway_reference, gateway_transaction_id, payment_method, customer_email, metadata, paid_at, created_at, updated_at',
       messages: 'id, full_name, email, phone, subject, message, status, created_at, updated_at',
       services: 'id, slug, title, yoruba_name, short_description, full_description, category, icon_name, is_active, display_order',
       settings: 'key, value',
-      blocked_dates: '*',
+      blocked_dates: 'event_date, note, created_by, created_at',
     };
 
     try {

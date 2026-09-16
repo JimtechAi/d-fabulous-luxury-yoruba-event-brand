@@ -8,6 +8,7 @@ import { RouterProvider, useRouter } from './lib/router';
 import { AppLayout } from './layouts/AppLayout';
 import { Container } from './components/Container';
 import { AdminRouteGuard } from './components/AdminRouteGuard';
+import { Analytics } from './components/Analytics';
 
 interface AppErrorBoundaryState {
   hasError: boolean;
@@ -54,6 +55,7 @@ const BookShell = lazy(() => import('./pages/BookShell').then((module) => ({ def
 const ContactShell = lazy(() => import('./pages/ContactShell').then((module) => ({ default: module.ContactShell })));
 const AboutShell = lazy(() => import('./pages/AboutShell').then((module) => ({ default: module.AboutShell })));
 const ExperienceShell = lazy(() => import('./pages/ExperienceShell').then((module) => ({ default: module.ExperienceShell })));
+const AwardsShell = lazy(() => import('./pages/AwardsShell').then((module) => ({ default: module.AwardsShell })));
 const TestimonialsShell = lazy(() => import('./pages/TestimonialsShell').then((module) => ({ default: module.TestimonialsShell })));
 const FaqShell = lazy(() => import('./pages/FaqShell').then((module) => ({ default: module.FaqShell })));
 const PrivacyPolicyShell = lazy(() => import('./pages/PrivacyPolicyShell').then((module) => ({ default: module.PrivacyPolicyShell })));
@@ -99,6 +101,8 @@ const AppContent: React.FC = () => {
         return <AboutShell />;
       case '/experience':
         return <ExperienceShell />;
+      case '/experience/awards':
+        return <AwardsShell />;
       case '/gallery':
       case '/experience/gallery':
         return <GalleryShell type="gallery" />;
@@ -182,6 +186,7 @@ const AppContent: React.FC = () => {
 export default function App() {
   return (
     <AppErrorBoundary>
+      <Analytics />
       <RouterProvider>
         <AppContent />
       </RouterProvider>

@@ -19,6 +19,9 @@ export const SEO: React.FC<PageMetaProps> = ({
   noindex = false,
 }) => {
   useEffect(() => {
+    const configuredSiteUrl = (import.meta.env.VITE_SITE_URL || '').replace(/\/+$/, '');
+    const siteUrl = configuredSiteUrl || window.location.origin;
+
     // 1. Document Title
     const fullTitle = title.includes("D’Fabulous") ? title : `${title} | D’Fabulous`;
     document.title = fullTitle;
@@ -48,7 +51,10 @@ export const SEO: React.FC<PageMetaProps> = ({
     setMetaTag('property', 'og:site_name', BRAND_INFO.name);
 
     if (canonicalUrl || window.location.href) {
-      const url = canonicalUrl || `${window.location.origin}${window.location.pathname}`;
+      const canonicalPath = canonicalUrl
+        ? new URL(canonicalUrl, window.location.origin).pathname
+        : window.location.pathname;
+      const url = `${siteUrl}${canonicalPath === '/' ? '' : canonicalPath}`;
       const absoluteOgImage = new URL(ogImage, window.location.origin).href;
       setMetaTag('property', 'og:url', url);
       setMetaTag('property', 'og:image', absoluteOgImage);
@@ -64,23 +70,28 @@ export const SEO: React.FC<PageMetaProps> = ({
         document.head.appendChild(canonicalLink);
       }
       canonicalLink.setAttribute('href', url);
+
+      const verificationToken = (import.meta.env.VITE_GOOGLE_SITE_VERIFICATION || '').trim();
+      if (verificationToken) {
+        setMetaTag('name', 'google-site-verification', verificationToken);
+      }
     }
 
     // 4. Schema.org JSON-LD Structured Data
     const website = {
       "@type": "WebSite",
-      "@id": `${window.location.origin}/#website`,
+      "@id": `${siteUrl}/#website`,
       "name": BRAND_INFO.name,
-      "url": window.location.origin,
-      "publisher": { "@id": `${window.location.origin}/#organization` },
+      "url": siteUrl,
+      "publisher": { "@id": `${siteUrl}/#organization` },
     };
 
     const organization = {
       "@type": ["Organization", "ProfessionalService"],
-      "@id": `${window.location.origin}/#organization`,
+      "@id": `${siteUrl}/#organization`,
       "name": BRAND_INFO.name,
       "description": BRAND_INFO.positioning,
-      "url": window.location.origin,
+      "url": siteUrl,
       "email": BRAND_INFO.placeholders.email,
       "areaServed": ["United Kingdom", "Europe", "Nigeria", "International destinations"],
       "knowsLanguage": ["English", "Yoruba"],
@@ -91,10 +102,19 @@ export const SEO: React.FC<PageMetaProps> = ({
       graph.push({
         "@type": "Service",
         "name": schemaName,
-        "provider": { "@id": `${window.location.origin}/#organization` },
+        "provider": { "@id": `${siteUrl}/#organization` },
         "areaServed": organization.areaServed,
       });
     }
+
+    graph.push({
+      "@type": "WebPage",
+      "@id": `${siteUrl}${window.location.pathname}#webpage`,
+      "url": canonicalUrl || `${siteUrl}${window.location.pathname}`,
+      "name": fullTitle,
+      "description": description,
+      "isPartOf": { "@id": `${siteUrl}/#website` },
+    });
     if (schemaType === 'faq' && schemaItems.length > 0) {
       graph.push({
         "@type": "FAQPage",

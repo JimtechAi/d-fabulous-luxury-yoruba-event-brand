@@ -22,6 +22,7 @@ import { getCurrentAdmin, signOut } from '../lib/auth';
 import { CURRENCIES, type CurrencyCode } from '../data/currencies';
 import {
   buildWhatsAppUrl,
+  archiveBooking,
   buildBookingConfirmationMessage,
   deleteBooking,
   formatAdminDate,
@@ -44,7 +45,8 @@ import {
   type PaymentRecord,
 } from '../lib/admin';
 
-const bookingStatuses = ['pending', 'confirmed', 'deposit paid', 'fully paid', 'completed', 'cancelled'];
+const bookingStatuses = ['pending', 'confirmed', 'deposit paid', 'fully paid', 'completed', 'cancelled', 'archived'];
+const editableBookingStatuses = bookingStatuses.filter((status) => status !== 'archived');
 const paymentFilters = ['all', 'unpaid', 'part payment', 'fully paid', 'refunded'];
 type BookingSort = 'newest' | 'oldest' | 'event-soonest' | 'event-latest';
 
@@ -56,6 +58,17 @@ const quickWhatsAppMessages = [
   'Event follow-up',
   'Custom message',
 ] as const;
+
+function getPurgeEligibilityDate(archivedAt: string | null | undefined): string | null {
+  if (!archivedAt) return null;
+  const archivedDate = new Date(archivedAt);
+  if (Number.isNaN(archivedDate.getTime())) return null;
+  const year = archivedDate.getUTCFullYear();
+  const month = archivedDate.getUTCMonth() + 6;
+  const day = archivedDate.getUTCDate();
+  const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(year, month, Math.min(day, lastDay))).toISOString();
+}
 
 export const AdminBookingsShell: React.FC = () => {
   const { navigate } = useRouter();
@@ -77,13 +90,13 @@ export const AdminBookingsShell: React.FC = () => {
   const [savingAmount, setSavingAmount] = useState(false);
   const [savingPayment, setSavingPayment] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [archiving, setArchiving] = useState(false);
   const [error, setError] = useState('');
   // Kept separate from `error` so an action message never hides the bookings list.
   const [loadError, setLoadError] = useState('');
   const [success, setSuccess] = useState('');
   const [paymentHistory, setPaymentHistory] = useState<PaymentRecord[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [bookingDraft, setBookingDraft] = useState({
     event_date: '',
     event_location: '',
@@ -233,7 +246,6 @@ export const AdminBookingsShell: React.FC = () => {
       gateway_reference: '',
       gateway_transaction_id: '',
     }));
-    setDeleteConfirmation('');
     setWhatsAppTemplate('General follow-up');
     setWhatsAppMessage('Hello ' + (selectedItem.full_name || 'there') + ', this is D\'Fabulous regarding your event planning. Please let us know if there is anything we can help with. Thank you.');
   }, [selectedItem]);
@@ -375,10 +387,6 @@ export const AdminBookingsShell: React.FC = () => {
 
   const handleDeleteBooking = async () => {
     if (!selectedItem) return;
-    if (deleteConfirmation !== 'DELETE BOOKING') {
-      setError('Please type DELETE BOOKING to confirm permanent deletion.');
-      return;
-    }
 
     setDeleting(true);
     setError('');
@@ -390,7 +398,6 @@ export const AdminBookingsShell: React.FC = () => {
       const refreshed = await getAdminBookings();
       setItems(refreshed);
       setShowDeleteConfirm(false);
-      setDeleteConfirmation('');
 
       if (refreshed.some((item) => item.id === deletedId)) {
         setSelectedId(deletedId);
@@ -404,6 +411,24 @@ export const AdminBookingsShell: React.FC = () => {
       setError(err instanceof Error ? err.message : 'Unable to permanently delete the booking.');
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleArchiveBooking = async () => {
+    if (!selectedItem || selectedItem.status?.toLowerCase() !== 'completed') return;
+    setArchiving(true);
+    setError('');
+    setSuccess('');
+    try {
+      const archived = await archiveBooking(selectedItem.id);
+      const refreshed = await getAdminBookings();
+      setItems(refreshed);
+      setSelectedId(archived.id);
+      setSuccess('Booking archived successfully.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unable to archive the booking.');
+    } finally {
+      setArchiving(false);
     }
   };
 
@@ -603,7 +628,7 @@ export const AdminBookingsShell: React.FC = () => {
                     </div>
                     <div className="flex flex-wrap gap-3">
                       <select value={normalizeStatus(selectedItem.status, 'pending')} onChange={(event) => void handleStatusChange(event.target.value)} disabled={savingStatus} className="border border-gold-luxury/20 bg-ivory-warm px-3 py-2 text-sm text-charcoal-soft focus:outline-none focus:ring-2 focus:ring-gold-luxury">
-                        {bookingStatuses.map((status) => <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>)}
+                        {editableBookingStatuses.map((status) => <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>)}
                       </select>
                       {savingStatus && <LoaderCircle className="h-4 w-4 animate-spin text-gold-dark" aria-label="Saving status" />}
                     </div>
@@ -638,6 +663,18 @@ export const AdminBookingsShell: React.FC = () => {
                       <dt className="text-[10px] uppercase tracking-[0.2em] text-gold-dark">Location</dt>
                       <dd className="mt-1 text-sm text-charcoal-soft">{selectedItem.event_location || 'Location pending'}</dd>
                     </div>
+                    {selectedItem.status?.toLowerCase() === 'archived' && (
+                      <>
+                        <div>
+                          <dt className="text-[10px] uppercase tracking-[0.2em] text-gold-dark">Archived</dt>
+                          <dd className="mt-1 text-sm text-charcoal-soft">{formatAdminDate(selectedItem.archived_at)}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-[10px] uppercase tracking-[0.2em] text-gold-dark">Scheduled purge</dt>
+                          <dd className="mt-1 text-sm text-charcoal-soft">{formatAdminDate(getPurgeEligibilityDate(selectedItem.archived_at))}</dd>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   <div className="mt-6 border-t border-gold-luxury/20 pt-5">
@@ -728,6 +765,11 @@ export const AdminBookingsShell: React.FC = () => {
                       </div>
                       <div className="mt-3 flex gap-3">
                         <Button onClick={() => void handleBookingDetailsSave()} disabled={savingDetails} icon={savingDetails ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}>{savingDetails ? 'Saving...' : 'Save details'}</Button>
+                        {selectedItem.status?.toLowerCase() === 'completed' && (
+                          <Button variant="secondary" onClick={() => void handleArchiveBooking()} disabled={archiving} icon={archiving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}>
+                            {archiving ? 'Archiving...' : 'Archive booking'}
+                          </Button>
+                        )}
                         {canDeleteBooking && (
                           <Button variant="danger" onClick={() => setShowDeleteConfirm(true)} icon={<Trash2 className="h-4 w-4" />}>Delete booking</Button>
                         )}
@@ -735,13 +777,22 @@ export const AdminBookingsShell: React.FC = () => {
                     </div>
 
                     {showDeleteConfirm && (
-                      <div className="mt-6 border border-red-200 bg-red-50 p-4">
-                        <p className="text-sm font-medium text-red-900">This action is permanent and cannot be undone.</p>
-                        <p className="mt-2 text-sm text-red-800">Type DELETE BOOKING to confirm.</p>
-                        <input value={deleteConfirmation} onChange={(event) => setDeleteConfirmation(event.target.value)} className="mt-3 w-full border border-red-200 bg-white px-3 py-2 text-sm text-charcoal-soft focus:outline-none focus:ring-2 focus:ring-red-400" placeholder="DELETE BOOKING" />
-                        <div className="mt-3 flex gap-3">
-                          <Button variant="danger" onClick={() => void handleDeleteBooking()} disabled={deleting} icon={deleting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}>{deleting ? 'Deleting...' : 'Confirm delete'}</Button>
-                          <Button variant="secondary" onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmation(''); }}>Cancel</Button>
+                      <div
+                        className="mt-6 border border-red-200 bg-red-50 p-5"
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="delete-booking-title"
+                        aria-describedby="delete-booking-description"
+                      >
+                        <h4 id="delete-booking-title" className="font-display text-2xl text-red-900">Delete Booking?</h4>
+                        <p id="delete-booking-description" className="mt-2 text-sm leading-relaxed text-red-800">
+                          You are about to permanently delete booking {getBookingReferenceValue(selectedItem.booking_reference)} for {selectedItem.full_name || 'this customer'}. This action cannot be undone.
+                        </p>
+                        <div className="mt-4 flex flex-wrap gap-3">
+                          <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)} disabled={deleting}>Cancel</Button>
+                          <Button variant="danger" onClick={() => void handleDeleteBooking()} disabled={deleting} icon={deleting ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}>
+                            {deleting ? 'Deleting...' : 'Confirm Delete'}
+                          </Button>
                         </div>
                       </div>
                     )}
