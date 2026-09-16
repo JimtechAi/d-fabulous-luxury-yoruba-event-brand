@@ -39,7 +39,7 @@ export const Image: React.FC<ImageMediaProps> = ({
             DF
           </div>
           <p className="text-xs font-display tracking-widest text-burgundy-deep/90 uppercase">
-            D’Fabulous Media Frame
+            D’Fabulous
           </p>
         </div>
       ) : (
