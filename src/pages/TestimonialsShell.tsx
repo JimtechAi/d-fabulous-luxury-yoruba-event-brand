@@ -10,7 +10,7 @@ import { TestimonialCard } from '../components/TestimonialCard';
 import { Button } from '../components/Button';
 import { SEO } from '../components/SEO';
 import { getTestimonials, DbTestimonial } from '../lib/db';
-import { ShieldCheck, CheckCircle2, Play } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShieldCheck, CheckCircle2, Play, X } from 'lucide-react';
 
 interface TestimonialItem {
   id: string;
@@ -50,12 +50,84 @@ export const TestimonialsShell: React.FC = () => {
     '/assets/testimonials/testimonials8.webp.jpeg',
   ];
   const videoRefs = useRef<Array<HTMLVideoElement | null>>([]);
+  const triggerRefs = useRef<Array<HTMLElement | null>>([]);
+  const modalVideoRef = useRef<HTMLVideoElement | null>(null);
+  const modalCloseButtonRef = useRef<HTMLButtonElement | null>(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState<number | null>(null);
+
+  const resetVideo = (video: HTMLVideoElement | null) => {
+    if (!video) return;
+    video.pause();
+    video.currentTime = 0;
+  };
 
   const pauseOtherVideos = (activeVideo: HTMLVideoElement) => {
     videoRefs.current.forEach((video) => {
       if (video && video !== activeVideo) video.pause();
     });
   };
+
+  const openVideo = (index: number, trigger: HTMLElement) => {
+    videoRefs.current.forEach(resetVideo);
+    triggerRefs.current[index] = trigger;
+    setSelectedVideoIndex(index);
+  };
+
+  const closeVideo = () => {
+    resetVideo(modalVideoRef.current);
+    videoRefs.current.forEach(resetVideo);
+    const trigger = selectedVideoIndex === null ? null : triggerRefs.current[selectedVideoIndex];
+    setSelectedVideoIndex(null);
+    trigger?.focus();
+  };
+
+  const selectVideo = (index: number) => {
+    resetVideo(modalVideoRef.current);
+    videoRefs.current.forEach(resetVideo);
+    setSelectedVideoIndex((index + testimonialVideos.length) % testimonialVideos.length);
+  };
+
+  useEffect(() => {
+    if (selectedVideoIndex === null) return;
+
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeVideo();
+      if (event.key === 'ArrowLeft') selectVideo(selectedVideoIndex - 1);
+      if (event.key === 'ArrowRight') selectVideo(selectedVideoIndex + 1);
+      if (event.key === 'Tab' && modalRef.current) {
+        const focusable = Array.from(modalRef.current.querySelectorAll<HTMLElement>('button, video, [href], [tabindex]:not([tabindex="-1"])'));
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+
+    const playSelectedVideo = () => {
+      const video = modalVideoRef.current;
+      if (!video) return;
+      modalCloseButtonRef.current?.focus();
+      video.currentTime = 0;
+      video.play().catch(() => undefined);
+    };
+    const frame = window.requestAnimationFrame(playSelectedVideo);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+      resetVideo(modalVideoRef.current);
+    };
+  }, [selectedVideoIndex]);
 
   return (
     <>
@@ -90,7 +162,20 @@ export const TestimonialsShell: React.FC = () => {
             </p>
           </div>
 
-          <figure className="group relative mx-auto max-w-5xl overflow-hidden rounded-md border border-burgundy-deep/15 bg-black-rich shadow-lg focus-within:ring-2 focus-within:ring-gold-luxury focus-within:ring-offset-2">
+          <figure
+            ref={(element) => { triggerRefs.current[0] = element; }}
+            className="group relative mx-auto max-w-5xl overflow-hidden rounded-md border border-burgundy-deep/15 bg-black-rich shadow-lg focus-within:ring-2 focus-within:ring-gold-luxury focus-within:ring-offset-2"
+            role="button"
+            tabIndex={0}
+            aria-label="Open featured client testimonial video"
+            onClick={(event) => openVideo(0, event.currentTarget)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openVideo(0, event.currentTarget);
+              }
+            }}
+          >
             <div className="relative aspect-video">
               <video
                 ref={(video) => { videoRefs.current[0] = video; }}
@@ -149,7 +234,21 @@ export const TestimonialsShell: React.FC = () => {
             {testimonialVideos.slice(1).map((video, index) => {
               const videoIndex = index + 1;
               return (
-              <figure key={video.src} className="group overflow-hidden rounded-md border border-gold-luxury/20 bg-black-rich focus-within:ring-2 focus-within:ring-gold-luxury focus-within:ring-offset-2">
+              <figure
+                key={video.src}
+                ref={(element) => { triggerRefs.current[videoIndex] = element; }}
+                className="group overflow-hidden rounded-md border border-gold-luxury/20 bg-black-rich focus-within:ring-2 focus-within:ring-gold-luxury focus-within:ring-offset-2"
+                role="button"
+                tabIndex={0}
+                aria-label={`Open client testimonial video ${videoIndex + 1}`}
+                onClick={(event) => openVideo(videoIndex, event.currentTarget)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openVideo(videoIndex, event.currentTarget);
+                  }
+                }}
+              >
                 <div className="relative aspect-video">
                   <video
                     className="h-full w-full object-contain"
@@ -174,6 +273,68 @@ export const TestimonialsShell: React.FC = () => {
               );
             })}
           </div>
+
+          {selectedVideoIndex !== null && (
+            <div
+              ref={modalRef}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black-rich/95 p-4 sm:p-8"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="testimonial-video-modal-title"
+              onClick={(event) => {
+                if (event.target === event.currentTarget) closeVideo();
+              }}
+            >
+              <div className="relative w-full max-w-6xl">
+                <h2 id="testimonial-video-modal-title" className="sr-only">
+                  Client testimonial video {selectedVideoIndex + 1} of {testimonialVideos.length}
+                </h2>
+                <button
+                  ref={modalCloseButtonRef}
+                  type="button"
+                  aria-label="Close testimonial video"
+                  onClick={closeVideo}
+                  className="absolute right-0 top-0 z-10 inline-flex h-11 w-11 -translate-y-14 items-center justify-center border border-gold-luxury/60 text-ivory-warm hover:bg-gold-luxury hover:text-black-rich focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-luxury sm:-right-2 sm:top-2 sm:translate-x-full sm:translate-y-0"
+                >
+                  <X className="h-5 w-5" aria-hidden="true" />
+                </button>
+                <div className="relative flex items-center gap-2 sm:gap-5">
+                  <button
+                    type="button"
+                    aria-label="Previous testimonial video"
+                    onClick={() => selectVideo(selectedVideoIndex - 1)}
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center border border-gold-luxury/60 text-ivory-warm hover:bg-gold-luxury hover:text-black-rich focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-luxury"
+                  >
+                    <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                  <video
+                    key={testimonialVideos[selectedVideoIndex].src}
+                    ref={(element) => { modalVideoRef.current = element; }}
+                    className="max-h-[78vh] min-w-0 flex-1 object-contain"
+                    controls
+                    controlsList="nodownload"
+                    autoPlay
+                    muted
+                    playsInline
+                    preload="metadata"
+                    poster={testimonialVideos[selectedVideoIndex].poster}
+                    aria-label={`Client testimonial video ${selectedVideoIndex + 1}`}
+                  >
+                    <source src={testimonialVideos[selectedVideoIndex].src} type="video/mp4" />
+                    Your browser does not support the testimonial video.
+                  </video>
+                  <button
+                    type="button"
+                    aria-label="Next testimonial video"
+                    onClick={() => selectVideo(selectedVideoIndex + 1)}
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center border border-gold-luxury/60 text-ivory-warm hover:bg-gold-luxury hover:text-black-rich focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-luxury"
+                  >
+                    <ChevronRight className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
             {testimonialImages.map((src, index) => (
