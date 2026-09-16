@@ -70,16 +70,6 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service, className = '
                 decoding="async"
                 className="absolute inset-0 h-full w-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-black/10" aria-hidden="true" />
-              <div className="relative z-10 w-10 h-10 rounded-full bg-burgundy-deep/80 border border-gold-luxury/40 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300">
-                {getServiceIcon(service.id)}
-              </div>
-              <span className="relative z-10 font-display text-sm tracking-wider text-champagne-soft font-normal uppercase">
-                {service.yorubaName || service.title}
-              </span>
-              <span className="relative z-10 text-[9px] font-sans text-gold-luxury/80 tracking-widest uppercase mt-0.5">
-                {service.category === 'core' ? 'Ceremonial Core' : service.category === 'specialist' ? 'Specialist Hosting' : 'Brand Role'}
-              </span>
             </>
           ) : (
             <>
