@@ -3,6 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Google tag (gtag.js) is initialized here, synchronously in the document
+      head, rather than being injected by React after mount. This is required
+      for Tag Assistant / GA4 to reliably detect the config command and avoid
+      "deferred hits" (a config command executed too late for the tag to be
+      considered active on initial page load). The measurement ID is injected
+      at build time via Vite's HTML env-variable replacement
+      (https://vite.dev/guide/env-and-mode.html#html-env-replacement) from the
+      existing VITE_GA_MEASUREMENT_ID variable; it is intentionally public
+      client-side configuration, not a secret. If the variable is unset (e.g.
+      local development without analytics configured), gtag is never defined
+      and no network request is made.
+    -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=%VITE_GA_MEASUREMENT_ID%"></script>
+    <script>
+      (function () {
+        var GA_MEASUREMENT_ID = '%VITE_GA_MEASUREMENT_ID%';
+        if (!GA_MEASUREMENT_ID) return;
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { window.dataLayer.push(arguments); }
+        window.gtag = gtag;
+        gtag('js', new Date());
+        // send_page_view is disabled because this is a client-routed SPA:
+        // page_view events are dispatched explicitly per route by
+        // src/components/Analytics.tsx to avoid duplicates and to include
+        // the correct title/path for the destination route.
+        gtag('config', GA_MEASUREMENT_ID, { anonymize_ip: true, send_page_view: false });
+      })();
+    </script>
     <title>D’Fabulous | Luxury Yoruba Event Personality & Cultural Host</title>
     <meta name="description" content="UK-based luxury event personality and cultural host for Nigerian and Yoruba traditional engagements, weddings, private events, and destination celebrations." />
     <meta property="og:title" content="D’Fabulous | Luxury Yoruba Event Personality & Cultural Host" />
