@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from '../lib/router';
 
 type AnalyticsWindow = Window & {
@@ -6,52 +6,37 @@ type AnalyticsWindow = Window & {
   gtag?: (...args: unknown[]) => void;
 };
 
-// GA4 must never load or record events for the protected admin area.
+// GA4 must never record events for the protected admin area. The gtag
+// snippet itself loads globally from index.html (see comment there), but no
+// page_view or conversion event is ever dispatched for these paths.
 const isAdminPath = (path: string) => path === '/admin' || path.startsWith('/admin/');
+
+// Module-scoped (not component state) so it survives React StrictMode's
+// intentional double-invocation of effects in development, guaranteeing a
+// single page_view per route even when the component mounts twice.
+let lastTrackedPath: string | null = null;
 
 export const Analytics: React.FC = () => {
   const { currentPath } = useRouter();
-  const gtagReady = useRef(false);
-  const lastTrackedPath = useRef<string | null>(null);
 
-  // Loads gtag.js once (on the first non-admin route reached) and records a
-  // page_view for every subsequent client-side route change.
+  // gtag('js', ...) and gtag('config', ...) already ran synchronously in
+  // index.html before React mounted. This effect only ever dispatches the
+  // per-route page_view event; it never (re)creates the script or config,
+  // and it never overwrites window.gtag.
   useEffect(() => {
     if (isAdminPath(currentPath)) return;
+    if (lastTrackedPath === currentPath) return;
 
     const analyticsWindow = window as AnalyticsWindow;
+    if (typeof analyticsWindow.gtag !== 'function') return;
 
-    if (!gtagReady.current) {
-      const measurementId = (import.meta.env.VITE_GA_MEASUREMENT_ID || '').trim();
-      if (!measurementId || document.querySelector('script[data-dfabulous-ga4]')) return;
-
-      analyticsWindow.dataLayer = analyticsWindow.dataLayer || [];
-      analyticsWindow.gtag = (...args: unknown[]) => {
-        analyticsWindow.dataLayer?.push(args);
-      };
-
-      const script = document.createElement('script');
-      script.async = true;
-      script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(measurementId)}`;
-      script.dataset.dfabulousGa4 = 'true';
-      document.head.appendChild(script);
-
-      analyticsWindow.gtag('js', new Date());
-      // send_page_view is disabled here because this is a client-routed SPA:
-      // page views are dispatched explicitly below on every route change to
-      // avoid duplicates and to include the correct title/path per route.
-      analyticsWindow.gtag('config', measurementId, { anonymize_ip: true, send_page_view: false });
-      gtagReady.current = true;
-    }
-
-    if (lastTrackedPath.current === currentPath) return;
-    lastTrackedPath.current = currentPath;
+    lastTrackedPath = currentPath;
+    const path = currentPath;
 
     // Routes are code-split (React.lazy), so the destination page's SEO
     // component may update document.title well after this effect runs.
     // Wait for that title mutation (bounded by a fallback timeout) before
     // reading it, so GA4 records the correct per-route page_title.
-    const path = currentPath;
     const titleEl = document.querySelector('title');
     let settled = false;
     let observer: MutationObserver | null = null;
