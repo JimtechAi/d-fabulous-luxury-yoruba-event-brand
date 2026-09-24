@@ -186,8 +186,8 @@ const AppContent: React.FC = () => {
 export default function App() {
   return (
     <AppErrorBoundary>
-      <Analytics />
       <RouterProvider>
+        <Analytics />
         <AppContent />
       </RouterProvider>
     </AppErrorBoundary>
