@@ -5,6 +5,7 @@ import { guardAdminRequest } from '../lib/adminGuard.ts';
 import { appendAuditLog } from '../lib/audit.ts';
 import { readJsonBody } from '../lib/http.ts';
 import { isValidDate, readText } from '../lib/validation.ts';
+import { conflictBody, isUniqueViolation } from '../lib/conflicts.ts';
 
 export const adminSettingsRoutes = new Hono();
 
@@ -30,6 +31,7 @@ adminSettingsRoutes.post('/api/admin/blocked-dates', async (c) => {
       .single();
     if (error) {
       console.error('[Edge API] Admin blocked date creation error:', error);
+      if (isUniqueViolation(error)) return c.json(conflictBody('dateAlreadyBlocked'), 409);
       return c.json({ success: false, error: 'Server Error', details: 'Unable to block this date.' }, 500);
     }
     return c.json({ success: true, data }, 201);

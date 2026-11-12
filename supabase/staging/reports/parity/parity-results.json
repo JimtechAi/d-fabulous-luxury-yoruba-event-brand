@@ -5752,32 +5752,48 @@
       "body": null
     },
     "ops": [
-      "service-role|GET|settings",
+      "service-role|GET|site_settings",
       "user-jwt|GET|profiles",
       "user-jwt|GET|user_permissions"
     ],
     "express": {
-      "status": 500,
+      "status": 200,
       "statuses": [
-        500
+        200
       ],
       "body": {
-        "details": "Unable to load administrative data.",
-        "error": "Server Error",
-        "success": false
+        "data": [
+          {
+            "key": "contact_phone",
+            "value": "+44 0000"
+          },
+          {
+            "key": "hero_title",
+            "value": "Welcome"
+          }
+        ],
+        "success": true
       },
       "db": 3,
       "emails": 0
     },
     "edge": {
-      "status": 500,
+      "status": 200,
       "statuses": [
-        500
+        200
       ],
       "body": {
-        "details": "Unable to load administrative data.",
-        "error": "Server Error",
-        "success": false
+        "data": [
+          {
+            "key": "contact_phone",
+            "value": "+44 0000"
+          },
+          {
+            "key": "hero_title",
+            "value": "Welcome"
+          }
+        ],
+        "success": true
       },
       "db": 3,
       "emails": 0,
@@ -8029,26 +8045,26 @@
       "user-jwt|PATCH|bookings"
     ],
     "express": {
-      "status": 500,
+      "status": 409,
       "statuses": [
-        500
+        409
       ],
       "body": {
-        "details": "Unable to update the booking details.",
-        "error": "Database Operation Error",
+        "details": "This date is no longer available. Please select another date.",
+        "error": "Date Unavailable",
         "success": false
       },
       "db": 3,
       "emails": 0
     },
     "edge": {
-      "status": 500,
+      "status": 409,
       "statuses": [
-        500
+        409
       ],
       "body": {
-        "details": "Unable to update the booking details.",
-        "error": "Database Operation Error",
+        "details": "This date is no longer available. Please select another date.",
+        "error": "Date Unavailable",
         "success": false
       },
       "db": 5,
@@ -9733,28 +9749,28 @@
       "user-jwt|POST|payments"
     ],
     "express": {
-      "status": 500,
+      "status": 409,
       "statuses": [
         200,
-        500
+        409
       ],
       "body": {
-        "details": "The payments table may be missing or the database rules may be blocking the insert.",
-        "error": "Database Operation Error",
+        "details": "A payment with this gateway reference already exists.",
+        "error": "Duplicate Payment Reference",
         "success": false
       },
       "db": 12,
       "emails": 0
     },
     "edge": {
-      "status": 500,
+      "status": 409,
       "statuses": [
         200,
-        500
+        409
       ],
       "body": {
-        "details": "The payments table may be missing or the database rules may be blocking the insert.",
-        "error": "Database Operation Error",
+        "details": "A payment with this gateway reference already exists.",
+        "error": "Duplicate Payment Reference",
         "success": false
       },
       "db": 16,
@@ -10817,26 +10833,26 @@
       "user-jwt|GET|user_permissions"
     ],
     "express": {
-      "status": 500,
+      "status": 409,
       "statuses": [
-        500
+        409
       ],
       "body": {
-        "details": "Unable to block this date.",
-        "error": "Server Error",
+        "details": "This date is already blocked.",
+        "error": "Date Already Blocked",
         "success": false
       },
       "db": 3,
       "emails": 0
     },
     "edge": {
-      "status": 500,
+      "status": 409,
       "statuses": [
-        500
+        409
       ],
       "body": {
-        "details": "Unable to block this date.",
-        "error": "Server Error",
+        "details": "This date is already blocked.",
+        "error": "Date Already Blocked",
         "success": false
       },
       "db": 5,
@@ -13101,26 +13117,26 @@
       "user-jwt|GET|user_permissions"
     ],
     "express": {
-      "status": 500,
+      "status": 409,
       "statuses": [
-        500
+        409
       ],
       "body": {
-        "details": "The user could not be created.",
-        "error": "Server Error",
+        "details": "A user with this email address already exists.",
+        "error": "User Already Exists",
         "success": false
       },
       "db": 2,
       "emails": 0
     },
     "edge": {
-      "status": 500,
+      "status": 409,
       "statuses": [
-        500
+        409
       ],
       "body": {
-        "details": "The user could not be created.",
-        "error": "Server Error",
+        "details": "A user with this email address already exists.",
+        "error": "User Already Exists",
         "success": false
       },
       "db": 4,

@@ -148,7 +148,7 @@ describe('staging baseline: documented repository conflicts', () => {
     } finally { await db.close(); }
   });
 
-  test('settings vs site_settings: the baseline has site_settings only, matching the migrations (admin settings GET reads "settings")', async () => {
+  test('settings vs site_settings: the baseline has site_settings only, and the admin settings GET now reads site_settings (defect D1 fixed)', async () => {
     const db = await platformDatabase();
     try {
       await installUpTo(db, '14');
@@ -157,8 +157,10 @@ describe('staging baseline: documented repository conflicts', () => {
       assert.equal(rows.settings, null);
       const server = read('server.ts');
       assert.match(server, /settings: 'settings\.view'/);
-      assert.match(server, /serverDatabase\.from\(resourceName\)\.select\(selections\[resourceName\]\)/);
+      assert.match(server, /resourceName === 'settings' \? 'site_settings' : resourceName/);
+      assert.match(server, /serverDatabase\.from\(tableName\)\.select\(selections\[resourceName\]\)/);
       assert.match(server, /settings: 'key, value'/);
+      assert.match(read('supabase/functions/dfabulous-api/routes/admin-data.ts'), /resourceName === 'settings' \? 'site_settings' : resourceName/);
     } finally { await db.close(); }
   });
 });

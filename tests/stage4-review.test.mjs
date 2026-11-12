@@ -45,11 +45,13 @@ describe('[SIMULATED] review 1: every administrator payment edit needs a reason,
     assert.deepEqual((await d.query(`SELECT metadata FROM public.payments`)).rows[0].metadata, { note: 'kept' }, 'the reason never stays on the payment row');
     const rows = await events(d, 'payment.updated');
     assert.equal(rows.length, 2);
-    assert.equal(rows[0].metadata.adjustment_reason, 'Bank transfer confirmed on statement');
-    assert.equal(rows[1].metadata.adjustment_reason.length, 500);
-    assert.equal(rows[0].actor_user_id, ID.ADMIN);
-    assert.equal(rows[0].metadata.context, 'administrator_edit');
-    assert.ok(!JSON.stringify(rows[0].metadata.before).includes('adjustment_reason') && !JSON.stringify(rows[0].metadata.after).includes('adjustment_reason'));
+    // both edits share one transaction, hence one created_at: identify the rows by content, never by position
+    const first = rows.find((r) => r.metadata.adjustment_reason === 'Bank transfer confirmed on statement');
+    const second = rows.find((r) => r.metadata.adjustment_reason?.length === 500);
+    assert.ok(first && second);
+    assert.equal(first.actor_user_id, ID.ADMIN);
+    assert.equal(first.metadata.context, 'administrator_edit');
+    assert.ok(!JSON.stringify(first.metadata.before).includes('adjustment_reason') && !JSON.stringify(first.metadata.after).includes('adjustment_reason'));
   });
 
   test('an unchanged save needs no reason and writes no audit row; a reason cannot be carried over to a later edit', async () => {

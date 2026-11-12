@@ -18,6 +18,7 @@ import {
   readText,
 } from '../lib/validation.ts';
 import { sendBookingStatusNotification } from '../lib/email.ts';
+import { conflictBody, isDateUnavailableError, isUniqueViolation } from '../lib/conflicts.ts';
 
 export const adminBookingRoutes = new Hono();
 
@@ -265,6 +266,7 @@ adminBookingRoutes.patch('/api/bookings/:id', async (c) => {
 
     if (error) {
       console.error('[Edge API] Booking detail update error:', error);
+      if (isDateUnavailableError(error)) return c.json(conflictBody('dateUnavailable'), 409);
       return c.json({ success: false, error: 'Database Operation Error', details: 'Unable to update the booking details.' }, 500);
     }
     if (!updated) {
@@ -474,6 +476,7 @@ adminBookingRoutes.post('/api/bookings/:id/payments', async (c) => {
 
     if (paymentError) {
       console.error('[Edge API] Payment record insert error:', paymentError);
+      if (isUniqueViolation(paymentError, 'gateway_reference')) return c.json(conflictBody('duplicatePaymentReference'), 409);
       return c.json({ success: false, error: 'Database Operation Error', details: 'The payments table may be missing or the database rules may be blocking the insert.' }, 500);
     }
 

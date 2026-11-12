@@ -39,7 +39,9 @@ adminDataRoutes.get('/api/admin/data/:resource', async (c) => {
 
   try {
     const db = serviceClient();
-    let query = db.from(resourceName).select(selections[resourceName]);
+    // The "settings" resource is stored in the site_settings table.
+    const tableName = resourceName === 'settings' ? 'site_settings' : resourceName;
+    let query = db.from(tableName).select(selections[resourceName]);
     if (resourceName === 'settings') query = query.order('key', { ascending: true });
     else if (resourceName === 'blocked_dates') query = query.order('event_date', { ascending: true });
     else if (resourceName === 'services') query = query.order('display_order', { ascending: true });

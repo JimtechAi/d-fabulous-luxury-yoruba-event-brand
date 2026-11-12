@@ -30,9 +30,10 @@ export function parseSchema(sql) {
     }
     tables[m[1]] = { columns, pk: [], unique: [] };
   }
-  for (const m of sql.matchAll(/ALTER TABLE ONLY "public"\."(\w+)"\r?\n\s+ADD CONSTRAINT "\w+" (PRIMARY KEY|UNIQUE) \(([^)]*)\)/g)) {
-    const cols = m[3].split(',').map((s) => s.trim().replace(/"/g, ''));
-    if (m[2] === 'PRIMARY KEY') tables[m[1]].pk = cols; else tables[m[1]].unique.push(cols);
+  for (const m of sql.matchAll(/ALTER TABLE ONLY "public"\."(\w+)"\r?\n\s+ADD CONSTRAINT "(\w+)" (PRIMARY KEY|UNIQUE) \(([^)]*)\)/g)) {
+    const cols = m[4].split(',').map((s) => s.trim().replace(/"/g, ''));
+    (tables[m[1]].constraints ??= []).push({ name: m[2], cols });
+    if (m[3] === 'PRIMARY KEY') tables[m[1]].pk = cols; else tables[m[1]].unique.push(cols);
   }
   return tables;
 }
@@ -172,7 +173,11 @@ export function createFake({ schema }) {
     const others = state[table].filter((r) => r !== replacing);
     for (const cols of [t.pk, ...t.unique].filter((c) => c.length)) {
       if (cols.every((c) => row[c] === null || row[c] === undefined)) continue;
-      if (others.some((r) => cols.every((c) => String(r[c]) === String(row[c])))) throw { status: 409, code: '23505', message: `duplicate key value violates unique constraint on "${table}" (${cols.join(', ')})` };
+      if (others.some((r) => cols.every((c) => String(r[c]) === String(row[c])))) {
+        const name = (t.constraints ?? []).find((k) => k.cols.join() === cols.join())?.name ?? `${table}_${cols.join('_')}_key`;
+        // same wording as PostgreSQL / PostgREST, so error classification is exercised on realistic errors
+        throw { status: 409, code: '23505', message: `duplicate key value violates unique constraint "${name}"`, details: `Key (${cols.join(', ')})=(${cols.map((c) => row[c]).join(', ')}) already exists.` };
+      }
     }
     if (table === 'audit_logs') for (const c of ['actor_user_id', 'target_user_id']) if (row[c] && !state.profiles.some((p) => p.id === row[c])) throw { status: 409, code: '23503', message: `insert or update on table "audit_logs" violates foreign key constraint on ${c}` };
     if (table === 'payments' && !state.bookings.some((b) => b.id === row.booking_id)) throw { status: 409, code: '23503', message: 'payments_booking_id_fkey' };
@@ -286,7 +291,7 @@ export function createFake({ schema }) {
       log.unhandled.push(`${request.method} ${table}`); return pgError(405, 'PGRST000', 'method');
     } catch (error) {
       if (error?.unsupported) { log.unhandled.push(error.message); return pgError(400, 'PGRST100', error.message); }
-      if (error?.code) { entry.error = error.code; return pgError(error.status ?? 400, error.code, error.message); }
+      if (error?.code) { entry.error = error.code; return pgError(error.status ?? 400, error.code, error.message, error.details ?? null); }
       throw error;
     }
   }

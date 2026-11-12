@@ -28,6 +28,12 @@ import {
   parseRole,
   type PolicyDenial,
 } from './supabase/functions/dfabulous-api/lib/userPolicy';
+import {
+  conflictBody,
+  isAuthEmailAlreadyRegistered,
+  isDateUnavailableError,
+  isUniqueViolation,
+} from './supabase/functions/dfabulous-api/lib/conflicts';
 
 const execFileAsync = promisify(execFile);
 
@@ -1155,6 +1161,10 @@ async function startServer() {
 
       if (error) {
         console.error('[Server API] Booking detail update error:', error);
+        if (isDateUnavailableError(error)) {
+          res.status(409).json(conflictBody('dateUnavailable'));
+          return;
+        }
         res.status(500).json({ success: false, error: 'Database Operation Error', details: 'Unable to update the booking details.' });
         return;
       }
@@ -1400,6 +1410,10 @@ async function startServer() {
 
       if (paymentError) {
         console.error('[Server API] Payment record insert error:', paymentError);
+        if (isUniqueViolation(paymentError, 'gateway_reference')) {
+          res.status(409).json(conflictBody('duplicatePaymentReference'));
+          return;
+        }
         res.status(500).json({ success: false, error: 'Database Operation Error', details: 'The payments table may be missing or the database rules may be blocking the insert.' });
         return;
       }
@@ -1686,7 +1700,9 @@ async function startServer() {
     };
 
     try {
-      let query = serverDatabase.from(resourceName).select(selections[resourceName]);
+      // The "settings" resource is stored in the site_settings table.
+      const tableName = resourceName === 'settings' ? 'site_settings' : resourceName;
+      let query = serverDatabase.from(tableName).select(selections[resourceName]);
       if (resourceName === 'settings') query = query.order('key', { ascending: true });
       else if (resourceName === 'blocked_dates') query = query.order('event_date', { ascending: true });
       else if (resourceName === 'services') query = query.order('display_order', { ascending: true });
@@ -1809,6 +1825,10 @@ async function startServer() {
       const { data, error } = await serverDatabase.from('blocked_dates').insert({ event_date: eventDate, note, created_by: accessCheck.adminUser!.userId }).select('*').single();
       if (error) {
         console.error('[Server API] Admin blocked date creation error:', error);
+        if (isUniqueViolation(error)) {
+          res.status(409).json(conflictBody('dateAlreadyBlocked'));
+          return;
+        }
         res.status(500).json({ success: false, error: 'Server Error', details: 'Unable to block this date.' });
         return;
       }
@@ -1963,6 +1983,10 @@ async function startServer() {
 
       if (createUserError || !createdUser?.user) {
         console.error('[Server API] Admin user creation failed:', createUserError);
+        if (isAuthEmailAlreadyRegistered(createUserError)) {
+          res.status(409).json(conflictBody('userAlreadyExists'));
+          return;
+        }
         res.status(500).json({ success: false, error: 'Server Error', details: 'The user could not be created.' });
         return;
       }

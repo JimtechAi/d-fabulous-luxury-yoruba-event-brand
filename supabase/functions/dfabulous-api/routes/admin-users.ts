@@ -19,6 +19,7 @@ import { guardAdminRequest } from '../lib/adminGuard.ts';
 import { appendAuditLog } from '../lib/audit.ts';
 import { readJsonBody } from '../lib/http.ts';
 import { isValidEmail, readText, sanitizeUserRecord } from '../lib/validation.ts';
+import { conflictBody, isAuthEmailAlreadyRegistered } from '../lib/conflicts.ts';
 import {
   checkCreateUser,
   checkDeleteUser,
@@ -102,6 +103,7 @@ adminUserRoutes.post('/api/admin/users', async (c) => {
 
     if (createUserError || !createdUser?.user) {
       console.error('[Edge API] Admin user creation failed:', createUserError);
+      if (isAuthEmailAlreadyRegistered(createUserError)) return c.json(conflictBody('userAlreadyExists'), 409);
       return c.json({ success: false, error: 'Server Error', details: 'The user could not be created.' }, 500);
     }
 

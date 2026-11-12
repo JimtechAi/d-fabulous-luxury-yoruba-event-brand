@@ -114,15 +114,46 @@ describe('[PARITY] Express versus Edge Function, 24 routes', () => {
       seen.add(`${cred}|${table}`);
       for (const p of needed) if (!matrix.get(`${role[cred]}|${table}`)?.has(p)) missing.add(`${role[cred]} needs ${p} on ${table} (${op})`);
     }
-    // KNOWN DEFECT D1 (present in BOTH backends, in production too): GET /api/admin/data/settings queries a table named "settings"; the approved schema only has
-    // "site_settings", so the route returns 500. Listed in docs/STAGE3_EDGE_PARITY_REPORT.md. It is the only operation outside the matrix.
-    assert.deepEqual([...missing].sort(), ['service_role needs SELECT on settings (service-role|GET|settings)'], 'the privilege matrix must cover every operation the code performs, except known defect D1');
+    // The privilege matrix covers every operation the code performs (defect D1, the former "settings" table query, is fixed and regression-tested above).
+    assert.deepEqual([...missing].sort(), [], 'the privilege matrix must cover every operation the code performs');
     assert.ok(seen.size >= 10, `operations observed across ${seen.size} credential/table pairs`);
   });
 
   test('[STATIC] the Edge Function and Express use the user JWT only where the Stage 4 policies expect it (bookings status/update/delete, payments insert) and the service role elsewhere', () => {
     const userJwtTables = new Set(results.flatMap((r) => r.ops).filter((o) => o.startsWith('user-jwt|')).map((o) => `${o.split('|')[1]} ${o.split('|')[2]}`));
     assert.deepEqual([...userJwtTables].sort(), ['DELETE bookings', 'GET bookings', 'GET payments', 'GET profiles', 'GET user_permissions', 'PATCH bookings', 'POST payments']);
+  });
+
+  test('[REGRESSION D1] the settings data resource reads the site_settings table on both backends and returns the stored keys', () => {
+    const r = results.find((x) => x.id === 'GET /api/admin/data/:resource :: admin reads settings');
+    for (const side of [r.express, r.edge]) {
+      assert.equal(side.status, 200);
+      assert.deepEqual(side.body, { success: true, data: [{ key: 'contact_phone', value: '+44 0000' }, { key: 'hero_title', value: 'Welcome' }] });
+    }
+    assert.ok(!results.some((x) => x.ops.includes('service-role|GET|settings')), 'no backend queries a table called "settings" any more');
+  });
+
+  test('[REGRESSION D2 to D5] expected conflicts answer HTTP 409 with the same clear body on both backends, and change nothing', () => {
+    const cases = [
+      ['PATCH /api/bookings/:id :: update date to a blocked date', { success: false, error: 'Date Unavailable', details: 'This date is no longer available. Please select another date.' }],
+      ['POST /api/admin/blocked-dates :: duplicate date', { success: false, error: 'Date Already Blocked', details: 'This date is already blocked.' }],
+      ['POST /api/bookings/:id/payments :: duplicate gateway reference', { success: false, error: 'Duplicate Payment Reference', details: 'A payment with this gateway reference already exists.' }],
+      ['POST /api/admin/users :: existing email', { success: false, error: 'User Already Exists', details: 'A user with this email address already exists.' }],
+    ];
+    for (const [id, body] of cases) {
+      const r = results.find((x) => x.id === id);
+      assert.ok(r, id);
+      for (const [name, side] of [['express', r.express], ['edge', r.edge]]) {
+        assert.equal(side.statuses.at(-1), 409, `${id} (${name})`);
+        assert.deepEqual(side.body, body, `${id} (${name})`);
+      }
+      assert.ok(!r.diffs.some((d) => d.category === 'resulting database state'), `${id}: identical state on both backends`);
+    }
+    // the duplicate payment: first submission accepted, second refused
+    assert.deepEqual(results.find((x) => /duplicate gateway reference/.test(x.id)).express.statuses, [200, 409]);
+    // other failures keep their status: invalid input stays 400, missing rows stay 404, authorisation stays 401/403, only conflicts moved to 409
+    assert.ok(!results.some((x) => x.express.status >= 500), 'no scenario now ends in a 5xx on either backend');
+    assert.ok(!results.some((x) => x.edge.status >= 500));
   });
 
   test('accepted differences are few, explained, and listed (the parity report relies on this list)', () => {
