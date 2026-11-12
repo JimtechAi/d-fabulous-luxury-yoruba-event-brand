@@ -22,7 +22,8 @@
     "schema:validate": "node scripts/schema-export.mjs validate supabase/staging/source/production_public_schema.sql",
     "schema:compare": "node scripts/schema-export.mjs compare supabase/staging/source/production_public_schema.sql supabase/staging/expected/baseline_after_install.pgdump.sql",
     "audit:prod": "npm audit --omit=dev",
-    "media:variants": "node scripts/generate-image-variants.mjs"
+    "media:variants": "node scripts/generate-image-variants.mjs",
+    "test:parity": "node --test --test-timeout=1500000 scripts/parity/parity.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
