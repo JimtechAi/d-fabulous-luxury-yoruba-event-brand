@@ -10,6 +10,24 @@ import ffmpegBinaryPath from 'ffmpeg-static';
 import { createServer as createViteServer } from 'vite';
 import { createClient } from '@supabase/supabase-js';
 import { sendBookingNotification, sendBookingStatusNotification, sendContactNotification } from './server/email';
+import {
+  adminBuckets,
+  FixedWindowLimiter,
+  parseTrustProxyHops,
+  submissionBuckets,
+  SUBMISSION_WINDOW_MS,
+  type AdminRateLimitScope,
+} from './server/rateLimit';
+import {
+  checkCreateUser,
+  checkDeleteUser,
+  checkUpdateUser,
+  checkUserManager,
+  parseBoolean,
+  parsePermissionList,
+  parseRole,
+  type PolicyDenial,
+} from './supabase/functions/dfabulous-api/lib/userPolicy';
 
 const execFileAsync = promisify(execFile);
 
@@ -255,11 +273,8 @@ async function getLocalVideoItems() {
   });
 }
 
-const submissionAttempts = new Map<string, { count: number; resetAt: number }>();
-const submissionWindowMs = 15 * 60 * 1000;
-const submissionLimit = 5;
-const adminStatusAttempts = new Map<string, { count: number; resetAt: number }>();
-const adminStatusLimit = 30;
+const submissionLimiter = new FixedWindowLimiter(SUBMISSION_WINDOW_MS);
+const adminLimiter = new FixedWindowLimiter(SUBMISSION_WINDOW_MS);
 const bookingStatusTransitions: Record<string, readonly string[]> = {
   pending: ['pending', 'confirmed', 'cancelled'],
   confirmed: ['confirmed', 'deposit paid', 'fully paid', 'completed', 'cancelled'],
@@ -322,7 +337,7 @@ async function appendAuditLog(entry: {
   if (!isServerDatabaseConfigured) return;
 
   try {
-    await serverDatabase
+    const { error } = await serverDatabase
       .from('audit_logs')
       .insert([
         {
@@ -333,32 +348,17 @@ async function appendAuditLog(entry: {
           created_at: new Date().toISOString(),
         },
       ]);
+    // supabase-js reports database errors in the result instead of throwing; never swallow them silently.
+    if (error) console.warn('[Server API] Audit log write rejected:', formatError(error));
   } catch (error) {
     console.warn('[Server API] Audit log write failed:', formatError(error));
   }
 }
 
-function pruneExpiredRateLimitEntries(at: number) {
-  for (const attempts of [submissionAttempts, adminStatusAttempts]) {
-    for (const [key, value] of attempts) {
-      if (value.resetAt <= at) attempts.delete(key);
-    }
-  }
-}
-
 function submissionRateLimit(req: express.Request, res: express.Response, next: express.NextFunction) {
-  const now = Date.now();
-  if (submissionAttempts.size > 1_000) pruneExpiredRateLimitEntries(now);
-  const key = req.ip || 'unknown';
-  const current = submissionAttempts.get(key);
-
-  if (!current || current.resetAt <= now) {
-    submissionAttempts.set(key, { count: 1, resetAt: now + submissionWindowMs });
-    next();
-    return;
-  }
-
-  if (current.count >= submissionLimit) {
+  const buckets = submissionBuckets(req.ip, req.headers['user-agent'], req.headers['accept-language'] as string | undefined);
+  if (!submissionLimiter.consumeAll(buckets)) {
+    res.setHeader('Retry-After', String(SUBMISSION_WINDOW_MS / 1000));
     res.status(429).json({
       success: false,
       error: 'Too Many Requests',
@@ -366,34 +366,36 @@ function submissionRateLimit(req: express.Request, res: express.Response, next: 
     });
     return;
   }
-
-  current.count += 1;
   next();
 }
 
-function adminStatusRateLimit(req: express.Request, res: express.Response, next: express.NextFunction) {
-  const now = Date.now();
-  if (adminStatusAttempts.size > 1_000) pruneExpiredRateLimitEntries(now);
-  const key = req.ip || 'unknown';
-  const current = adminStatusAttempts.get(key);
+function respondDenial(res: express.Response, denial: PolicyDenial) {
+  res.status(denial.status).json({ success: false, error: denial.error, details: denial.details });
+}
 
-  if (!current || current.resetAt <= now) {
-    adminStatusAttempts.set(key, { count: 1, resetAt: now + submissionWindowMs });
-    next();
-    return;
-  }
+// Administrator rate limiting. MUST be called only after the request has been validated,
+// authenticated and verified as an administrator (see each route), so unauthenticated or
+// unauthorised traffic can never consume or exhaust an administrator's quota. The quota is keyed
+// by the authenticated administrator id plus the trusted client IP. Returns false after sending a 429.
+function enforceAdminRateLimit(
+  req: express.Request,
+  res: express.Response,
+  adminUserId: string,
+  scope: AdminRateLimitScope = 'admin_status'
+): boolean {
+  if (adminLimiter.consumeAll(adminBuckets(scope, adminUserId, req.ip))) return true;
 
-  if (current.count >= adminStatusLimit) {
-    res.status(429).json({
-      success: false,
-      error: 'Too Many Requests',
-      details: 'Too many booking status changes were requested. Please try again later.',
-    });
-    return;
-  }
-
-  current.count += 1;
-  next();
+  res.setHeader('Retry-After', String(SUBMISSION_WINDOW_MS / 1000));
+  res.status(429).json({
+    success: false,
+    error: 'Too Many Requests',
+    details: scope === 'admin_settings'
+      ? 'Too many administrative changes were requested. Please try again later.'
+      : scope === 'admin_users'
+        ? 'Too many user-management changes were requested. Please try again later.'
+        : 'Too many booking status changes were requested. Please try again later.',
+  });
+  return false;
 }
 
 function isValidEmail(value: unknown): value is string {
@@ -574,7 +576,7 @@ async function requireAdminAccess(
     if (missingPermission) {
       return {
         adminUser,
-        response: { status: 403, json: getAuthorizationError('Authorization Error', `You are missing the required permission: ${missingPermission}.`) },
+        response: { status: 403, json: getAuthorizationError('Authorization Error', 'You do not have permission to perform this action.') },
       };
     }
   }
@@ -608,6 +610,15 @@ async function startServer() {
   }
 
   const app = express();
+  const trustProxyHops = parseTrustProxyHops(process.env.TRUST_PROXY_HOPS);
+  if (trustProxyHops) {
+    app.set('trust proxy', trustProxyHops);
+  } else if (process.env.NODE_ENV === 'production') {
+    console.warn(
+      '[Warning] TRUST_PROXY_HOPS is not set. Behind a reverse proxy every visitor will appear to share ' +
+      'the proxy address for rate limiting. Set it to the verified number of trusted proxy hops.'
+    );
+  }
   const port = Number(process.env.PORT) || 3000;
   const host = '0.0.0.0';
 
@@ -664,7 +675,7 @@ async function startServer() {
       res.setHeader('Access-Control-Allow-Origin', requestOrigin);
       res.setHeader('Vary', 'Origin');
       res.setHeader('Access-Control-Allow-Credentials', 'true');
-      res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
+      res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     }
     if (req.method === 'OPTIONS') {
@@ -830,7 +841,7 @@ async function startServer() {
         res.status(status >= 400 ? status : 500).json({
           success: false,
           error: dateUnavailable ? 'Date Unavailable' : 'Database Operation Error',
-          details: dateUnavailable ? 'This date is no longer available. Please select another date.' : formatError(error),
+          details: dateUnavailable ? 'This date is no longer available. Please select another date.' : 'Unable to record your booking at this time.',
         });
         return;
       }
@@ -873,7 +884,7 @@ async function startServer() {
   });
 
   // Update booking status and send only transition-specific customer notifications.
-  app.patch('/api/bookings/:id/status', adminStatusRateLimit, async (req, res) => {
+  app.patch('/api/bookings/:id/status', async (req, res) => {
     if (!isSupabaseConfigured) {
       res.status(503).json({ success: false, error: 'Database Configuration Error' });
       return;
@@ -898,6 +909,7 @@ async function startServer() {
         res.status(403).json({ success: false, error: 'Authorization Error', details: 'Only active administrators or the owner can change booking status.' });
         return;
       }
+      if (!enforceAdminRateLimit(req, res, accessCheck.adminUser!.userId)) return;
       const adminUser = accessCheck.adminUser!;
       const accessToken = req.headers.authorization!.slice(7).trim();
 
@@ -985,7 +997,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/bookings/:id/archive', adminStatusRateLimit, async (req, res) => {
+  app.post('/api/bookings/:id/archive', async (req, res) => {
     if (!isSupabaseConfigured) {
       res.status(503).json({ success: false, error: 'Database Configuration Error' });
       return;
@@ -1007,6 +1019,7 @@ async function startServer() {
         res.status(403).json({ success: false, error: 'Authorization Error', details: 'Only active administrators or the owner can archive bookings.' });
         return;
       }
+      if (!enforceAdminRateLimit(req, res, accessCheck.adminUser!.userId)) return;
 
       const { data: current, error: readError } = await serverDatabase
         .from('bookings')
@@ -1050,7 +1063,7 @@ async function startServer() {
     }
   });
 
-  app.patch('/api/bookings/:id', adminStatusRateLimit, async (req, res) => {
+  app.patch('/api/bookings/:id', async (req, res) => {
     if (!isSupabaseConfigured) {
       res.status(503).json({ success: false, error: 'Database Configuration Error' });
       return;
@@ -1068,6 +1081,7 @@ async function startServer() {
         res.status(accessCheck.response.status).json(accessCheck.response.json);
         return;
       }
+      if (!enforceAdminRateLimit(req, res, accessCheck.adminUser!.userId)) return;
       const accessToken = req.headers.authorization!.slice(7).trim();
 
       const payload = req.body || {};
@@ -1167,7 +1181,7 @@ async function startServer() {
     }
   });
 
-  app.delete('/api/bookings/:id', adminStatusRateLimit, async (req, res) => {
+  app.delete('/api/bookings/:id', async (req, res) => {
     if (!isSupabaseConfigured) {
       res.status(503).json({ success: false, error: 'Database Configuration Error' });
       return;
@@ -1189,6 +1203,7 @@ async function startServer() {
         res.status(403).json({ success: false, error: 'Authorization Error', details: 'Only active administrators or the owner can permanently delete bookings.' });
         return;
       }
+      if (!enforceAdminRateLimit(req, res, accessCheck.adminUser!.userId)) return;
       const adminUser = accessCheck.adminUser!;
       const accessToken = req.headers.authorization!.slice(7).trim();
 
@@ -1276,7 +1291,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/bookings/:id/payments', adminStatusRateLimit, async (req, res) => {
+  app.post('/api/bookings/:id/payments', async (req, res) => {
     if (!isSupabaseConfigured) {
       res.status(503).json({ success: false, error: 'Database Configuration Error' });
       return;
@@ -1313,6 +1328,7 @@ async function startServer() {
         res.status(accessCheck.response.status).json(accessCheck.response.json);
         return;
       }
+      if (!enforceAdminRateLimit(req, res, accessCheck.adminUser!.userId)) return;
       const adminUser = accessCheck.adminUser!;
       const accessToken = req.headers.authorization!.slice(7).trim();
 
@@ -1776,18 +1792,19 @@ async function startServer() {
     }
   });
 
-  app.post('/api/admin/blocked-dates', adminStatusRateLimit, async (req, res) => {
-    const accessCheck = await requireAdminAccess(req, ['bookings.manage']);
-    if (accessCheck.response) {
-      res.status(accessCheck.response.status).json(accessCheck.response.json);
-      return;
-    }
+  app.post('/api/admin/blocked-dates', async (req, res) => {
     const eventDate = req.body?.event_date;
     const note = req.body?.note === undefined ? null : readText(req.body.note, 240);
     if (!isValidDate(eventDate)) {
       res.status(400).json({ success: false, error: 'Validation Error', details: 'A valid event date is required.' });
       return;
     }
+    const accessCheck = await requireAdminAccess(req, ['bookings.manage']);
+    if (accessCheck.response) {
+      res.status(accessCheck.response.status).json(accessCheck.response.json);
+      return;
+    }
+    if (!enforceAdminRateLimit(req, res, accessCheck.adminUser!.userId)) return;
     try {
       const { data, error } = await serverDatabase.from('blocked_dates').insert({ event_date: eventDate, note, created_by: accessCheck.adminUser!.userId }).select('*').single();
       if (error) {
@@ -1802,17 +1819,18 @@ async function startServer() {
     }
   });
 
-  app.delete('/api/admin/blocked-dates/:eventDate', adminStatusRateLimit, async (req, res) => {
-    const accessCheck = await requireAdminAccess(req, ['bookings.manage']);
-    if (accessCheck.response) {
-      res.status(accessCheck.response.status).json(accessCheck.response.json);
-      return;
-    }
+  app.delete('/api/admin/blocked-dates/:eventDate', async (req, res) => {
     const eventDate = req.params.eventDate;
     if (!isValidDate(eventDate)) {
       res.status(400).json({ success: false, error: 'Validation Error', details: 'A valid event date is required.' });
       return;
     }
+    const accessCheck = await requireAdminAccess(req, ['bookings.manage']);
+    if (accessCheck.response) {
+      res.status(accessCheck.response.status).json(accessCheck.response.json);
+      return;
+    }
+    if (!enforceAdminRateLimit(req, res, accessCheck.adminUser!.userId)) return;
     try {
       const { error } = await serverDatabase.from('blocked_dates').delete().eq('event_date', eventDate);
       if (error) {
@@ -1828,11 +1846,6 @@ async function startServer() {
   });
 
   app.put('/api/admin/settings', async (req, res) => {
-    const accessCheck = await requireAdminAccess(req, ['settings.manage']);
-    if (accessCheck.response) {
-      res.status(accessCheck.response.status).json(accessCheck.response.json);
-      return;
-    }
     const values = req.body?.values;
     if (!values || typeof values !== 'object' || Array.isArray(values)) {
       res.status(400).json({ success: false, error: 'Validation Error', details: 'Settings values are required.' });
@@ -1843,6 +1856,12 @@ async function startServer() {
       res.status(400).json({ success: false, error: 'Validation Error', details: 'Settings values are invalid.' });
       return;
     }
+    const accessCheck = await requireAdminAccess(req, ['settings.manage']);
+    if (accessCheck.response) {
+      res.status(accessCheck.response.status).json(accessCheck.response.json);
+      return;
+    }
+    if (!enforceAdminRateLimit(req, res, accessCheck.adminUser!.userId, 'admin_settings')) return;
     try {
       for (const [key, value] of entries) {
         const { data: existing, error: readError } = await serverDatabase.from('site_settings').select('key').eq('key', key).maybeSingle();
@@ -1888,6 +1907,31 @@ async function startServer() {
   });
 
   app.post('/api/admin/users', async (req, res) => {
+    // 1. Validate the request.
+    const body = req.body || {};
+    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+    const fullName = typeof body.full_name === 'string' ? body.full_name.trim() : '';
+    const roleResult = parseRole(body.role);
+
+    if (!isValidEmail(email) || !roleResult.ok || !fullName) {
+      res.status(400).json({ success: false, error: 'Validation Error', details: 'Email, name, and role are required.' });
+      return;
+    }
+    const permissionsResult = body.permissions === undefined ? { ok: true as const, value: [] as string[] } : parsePermissionList(body.permissions);
+    if (!permissionsResult.ok) {
+      respondDenial(res, permissionsResult.denial);
+      return;
+    }
+    const activeResult = body.is_active === undefined ? { ok: true as const, value: true } : parseBoolean(body.is_active);
+    if (!activeResult.ok) {
+      respondDenial(res, activeResult.denial);
+      return;
+    }
+    const role = roleResult.value;
+    const permissions = permissionsResult.value;
+    const isActive = activeResult.value;
+
+    // 2-3. Authenticate, then verify user-management authority and the role/permission hierarchy.
     const accessCheck = await requireAdminAccess(req, ['users.manage']);
     if (accessCheck.response) {
       res.status(accessCheck.response.status).json(accessCheck.response.json);
@@ -1895,33 +1939,15 @@ async function startServer() {
     }
 
     const requester = accessCheck.adminUser!;
-    const body = req.body || {};
-    const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
-    const role = body.role;
-    const permissions = normalizePermissions(body.permissions);
-    const fullName = typeof body.full_name === 'string' ? body.full_name.trim() : '';
-    const isActive = body.is_active === undefined ? true : Boolean(body.is_active);
-
-    if (!isValidEmail(email) || !isRoleOption(role) || !fullName) {
-      res.status(400).json({ success: false, error: 'Validation Error', details: 'Email, name, and role are required.' });
+    const denial = checkUserManager(requester) ?? checkCreateUser(requester, role, permissions);
+    if (denial) {
+      respondDenial(res, denial);
       return;
     }
 
-    if (role === 'owner' && !requester.isOwner) {
-      res.status(403).json({ success: false, error: 'Authorization Error', details: 'Only the owner can create an owner-level administrator.' });
-      return;
-    }
-
-    if (!requester.isOwner && permissions.some((permission) => permission.startsWith('users.'))) {
-      res.status(403).json({ success: false, error: 'Authorization Error', details: 'You cannot grant user-management permissions beyond your own authority.' });
-      return;
-    }
-
-    const targetPermissions = requester.isOwner ? permissions : permissions.filter((permission) => requester.permissions.has(permission));
-    if (targetPermissions.length !== permissions.length) {
-      res.status(403).json({ success: false, error: 'Authorization Error', details: 'You cannot assign permissions you do not hold.' });
-      return;
-    }
+    // 4. Administrator rate limit (after authentication and authorisation).
+    if (!enforceAdminRateLimit(req, res, requester.userId, 'admin_users')) return;
+    const targetPermissions = permissions;
 
     try {
       const serviceAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
@@ -2000,12 +2026,7 @@ async function startServer() {
   });
 
   app.patch('/api/admin/users/:id', async (req, res) => {
-    const accessCheck = await requireAdminAccess(req, ['users.manage']);
-    if (accessCheck.response) {
-      res.status(accessCheck.response.status).json(accessCheck.response.json);
-      return;
-    }
-    const requester = accessCheck.adminUser!;
+    // 1. Validate the request.
     const targetId = readText(req.params.id, 120);
     const payload = req.body || {};
 
@@ -2014,6 +2035,41 @@ async function startServer() {
       return;
     }
 
+    const roleResult = payload.role === undefined ? null : parseRole(payload.role);
+    if (roleResult && !roleResult.ok) {
+      respondDenial(res, roleResult.denial);
+      return;
+    }
+    const permissionsResult = payload.permissions === undefined ? null : parsePermissionList(payload.permissions);
+    if (permissionsResult && !permissionsResult.ok) {
+      respondDenial(res, permissionsResult.denial);
+      return;
+    }
+    const activeResult = payload.is_active === undefined ? null : parseBoolean(payload.is_active);
+    if (activeResult && !activeResult.ok) {
+      respondDenial(res, activeResult.denial);
+      return;
+    }
+    const requestedRole = roleResult?.ok ? roleResult.value : undefined;
+    const nextPermissions = permissionsResult?.ok ? permissionsResult.value : null;
+
+    // 2-3. Authenticate, then verify user-management authority.
+    const accessCheck = await requireAdminAccess(req, ['users.manage']);
+    if (accessCheck.response) {
+      res.status(accessCheck.response.status).json(accessCheck.response.json);
+      return;
+    }
+    const requester = accessCheck.adminUser!;
+    const managerDenial = checkUserManager(requester);
+    if (managerDenial) {
+      respondDenial(res, managerDenial);
+      return;
+    }
+
+    // 4. Administrator rate limit (after authentication and authorisation).
+    if (!enforceAdminRateLimit(req, res, requester.userId, 'admin_users')) return;
+
+    // 5. Execute (target-dependent hierarchy checks need the stored profile).
     try {
       const { data: targetProfile, error: targetProfileError } = await serverDatabase
         .from('profiles')
@@ -2026,38 +2082,32 @@ async function startServer() {
         return;
       }
 
-      if (targetProfile.role === 'owner' && !requester.isOwner) {
-        res.status(403).json({ success: false, error: 'Authorization Error', details: 'Only the owner can modify owner-level users.' });
-        return;
-      }
-
-      if (requester.userId === targetId) {
-        res.status(403).json({ success: false, error: 'Authorization Error', details: 'You cannot change your own user role or permissions.' });
-        return;
-      }
-
-      const nextRole = payload.role !== undefined ? (isRoleOption(payload.role) ? payload.role : null) : targetProfile.role;
-      const nextPermissions = payload.permissions !== undefined ? normalizePermissions(payload.permissions) : null;
-      const nextActive = payload.is_active !== undefined ? Boolean(payload.is_active) : targetProfile.is_active;
-
-      if (nextRole === null) {
-        res.status(400).json({ success: false, error: 'Validation Error', details: 'The role is invalid.' });
-        return;
-      }
-
-      if (nextRole === 'owner' && !requester.isOwner) {
-        res.status(403).json({ success: false, error: 'Authorization Error', details: 'You cannot assign owner-level access.' });
-        return;
-      }
-
-      if (nextPermissions && !requester.isOwner) {
-        const disallowed = nextPermissions.filter((permission) => !requester.permissions.has(permission));
-        if (disallowed.length > 0) {
-          res.status(403).json({ success: false, error: 'Authorization Error', details: 'You cannot grant permissions you do not hold.' });
+      let currentPermissions: string[] = [];
+      if (nextPermissions) {
+        const { data: currentRows, error: currentError } = await serverDatabase
+          .from('user_permissions')
+          .select('permission_key')
+          .eq('user_id', targetId);
+        if (currentError) {
+          console.error('[Server API] Current permission lookup error:', currentError);
+          res.status(500).json({ success: false, error: 'Server Error', details: 'Unable to update permissions.' });
           return;
         }
+        currentPermissions = (currentRows || []).map((row) => row.permission_key);
       }
 
+      const denial = checkUpdateUser(requester, targetProfile, {
+        role: requestedRole,
+        permissions: nextPermissions ?? undefined,
+        currentPermissions,
+      });
+      if (denial) {
+        respondDenial(res, denial);
+        return;
+      }
+
+      const nextRole = requestedRole ?? targetProfile.role;
+      const nextActive = activeResult?.ok ? activeResult.value : targetProfile.is_active;
       const updates: Record<string, unknown> = {};
       if (nextRole !== undefined && nextRole !== targetProfile.role) { updates.role = nextRole; }
       if (nextActive !== undefined && nextActive !== targetProfile.is_active) { updates.is_active = nextActive; }
@@ -2076,7 +2126,6 @@ async function startServer() {
       }
 
       if (nextPermissions) {
-        const targetPermissionSet = requester.isOwner ? nextPermissions : nextPermissions.filter((permission) => requester.permissions.has(permission));
         const { error: permissionDeleteError } = await serverDatabase
           .from('user_permissions')
           .delete()
@@ -2088,8 +2137,8 @@ async function startServer() {
           return;
         }
 
-        if (targetPermissionSet.length > 0) {
-          const rows = targetPermissionSet.map((permissionKey) => ({
+        if (nextPermissions.length > 0) {
+          const rows = nextPermissions.map((permissionKey) => ({
             user_id: targetId,
             permission_key: permissionKey,
             created_at: new Date().toISOString(),
@@ -2153,6 +2202,14 @@ async function startServer() {
   });
 
   app.delete('/api/admin/users/:id', async (req, res) => {
+    // 1. Validate the request.
+    const targetId = readText(req.params.id, 120);
+    if (!targetId) {
+      res.status(400).json({ success: false, error: 'Validation Error', details: 'A valid user ID is required.' });
+      return;
+    }
+
+    // 2-3. Authenticate, then verify user-management authority.
     const accessCheck = await requireAdminAccess(req, ['users.manage']);
     if (accessCheck.response) {
       res.status(accessCheck.response.status).json(accessCheck.response.json);
@@ -2160,12 +2217,16 @@ async function startServer() {
     }
 
     const requester = accessCheck.adminUser!;
-    const targetId = readText(req.params.id, 120);
-    if (!targetId) {
-      res.status(400).json({ success: false, error: 'Validation Error', details: 'A valid user ID is required.' });
+    const managerDenial = checkUserManager(requester);
+    if (managerDenial) {
+      respondDenial(res, managerDenial);
       return;
     }
 
+    // 4. Administrator rate limit (after authentication and authorisation).
+    if (!enforceAdminRateLimit(req, res, requester.userId, 'admin_users')) return;
+
+    // 5. Execute.
     try {
       const { data: targetProfile, error: targetProfileError } = await serverDatabase
         .from('profiles')
@@ -2178,13 +2239,9 @@ async function startServer() {
         return;
       }
 
-      if (requester.userId === targetId) {
-        res.status(403).json({ success: false, error: 'Authorization Error', details: 'You cannot remove your own account.' });
-        return;
-      }
-
-      if (targetProfile.role === 'owner' && !requester.isOwner) {
-        res.status(403).json({ success: false, error: 'Authorization Error', details: 'Only the owner can remove owner-level users.' });
+      const denial = checkDeleteUser(requester, targetProfile);
+      if (denial) {
+        respondDenial(res, denial);
         return;
       }
 
@@ -2211,8 +2268,10 @@ async function startServer() {
       await appendAuditLog({
         actor_user_id: requester.userId,
         action: 'user.deleted',
-        target_user_id: targetId,
-        metadata: { role: targetProfile.role },
+        // The profile row is already gone and audit_logs.target_user_id references it, so the id is kept in the metadata instead (a foreign-key violation
+        // would otherwise reject the entry and the deletion would leave no audit record).
+        target_user_id: null,
+        metadata: { deleted_user_id: targetId, role: targetProfile.role },
       });
 
       res.json({ success: true, data: { id: targetId, deleted: true } });
@@ -2240,6 +2299,14 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
+    // dist/server.cjs (and its source map) is the backend bundle itself and must never be downloadable.
+    app.use((req, res, next) => {
+      if (/^\/server\.cjs(\.map)?$/i.test(req.path)) {
+        res.status(404).json({ success: false, error: 'Not Found' });
+        return;
+      }
+      next();
+    });
     app.use(express.static(distPath, { extensions: ['html'] }));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));

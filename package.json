@@ -5,11 +5,23 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && tsx scripts/prerender-seo.ts && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "build": "vite build && tsx scripts/prerender-seo.ts && node scripts/build-server.mjs",
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
+    "lint:edge": "deno check --config supabase/functions/dfabulous-api/deno.json supabase/functions/dfabulous-api/index.ts supabase/functions/dfabulous-api/tests/*.test.ts",
+    "test": "npm run test:node && npm run test:edge",
+    "test:node": "node --test tests/",
+    "test:edge": "deno test --allow-env --no-prompt --config supabase/functions/dfabulous-api/deno.json supabase/functions/dfabulous-api/tests/",
+    "scan:secrets": "node scripts/scan-secrets.mjs",
+    "staging:build": "node scripts/build-staging-install.mjs",
+    "staging:check": "node scripts/build-staging-install.mjs --check",
+    "stage4:build": "node scripts/build-stage4-baseline.mjs",
+    "stage4:check": "node scripts/build-stage4-baseline.mjs --check",
+    "schema:validate": "node scripts/schema-export.mjs validate supabase/staging/source/production_public_schema.sql",
+    "schema:compare": "node scripts/schema-export.mjs compare supabase/staging/source/production_public_schema.sql supabase/staging/expected/baseline_after_install.pgdump.sql",
+    "audit:prod": "npm audit --omit=dev",
     "media:variants": "node scripts/generate-image-variants.mjs"
   },
   "dependencies": {
@@ -27,6 +39,7 @@
     "vite": "^6.2.3"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.16",
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "@types/react": "^19.2.18",

@@ -1,0 +1,12 @@
+# Supabase CLI project configuration for the D'Fabulous backend migration.
+# project_id is a local workspace label only; the remote project ref is supplied
+# at deploy time (supabase link / --project-ref) and is never hardcoded here.
+project_id = "dfabulous"
+
+[functions.dfabulous-api]
+enabled = true
+# Public booking/availability/enquiry endpoints are called by anonymous website
+# visitors, so platform JWT verification is disabled and ALL authentication and
+# authorization is enforced inside the function (see lib/auth.ts).
+verify_jwt = false
+entrypoint = "./functions/dfabulous-api/index.ts"

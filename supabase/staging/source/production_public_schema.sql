@@ -1,0 +1,1718 @@
+--
+-- PostgreSQL database dump
+--
+
+
+-- Dumped from database version 17.6
+-- Dumped by pg_dump version 17.11
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: pg_database_owner
+--
+
+CREATE SCHEMA "public";
+
+
+ALTER SCHEMA "public" OWNER TO "pg_database_owner";
+
+--
+-- Name: SCHEMA "public"; Type: COMMENT; Schema: -; Owner: pg_database_owner
+--
+
+COMMENT ON SCHEMA "public" IS 'standard public schema';
+
+
+--
+-- Name: block_event_date("date", "text"); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION "public"."block_event_date"("p_event_date" "date", "p_note" "text" DEFAULT NULL::"text") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+    IF p_event_date IS NULL THEN
+        RAISE EXCEPTION 'Event date is required.';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM public.bookings
+        WHERE event_date = p_event_date
+        AND LOWER(COALESCE(status, '')) IN ('pending', 'confirmed')
+    ) THEN
+        RAISE EXCEPTION
+            'This date already has an active booking and cannot be blocked.';
+    END IF;
+
+    INSERT INTO public.blocked_dates (
+        event_date,
+        note,
+        created_by
+    )
+    VALUES (
+        p_event_date,
+        NULLIF(TRIM(p_note), ''),
+        auth.uid()
+    )
+    ON CONFLICT (event_date)
+    DO UPDATE SET
+        note = EXCLUDED.note;
+
+    RETURN TRUE;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."block_event_date"("p_event_date" "date", "p_note" "text") OWNER TO "postgres";
+
+--
+-- Name: generate_booking_reference(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION "public"."generate_booking_reference"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  IF NEW.booking_reference IS NULL
+     OR TRIM(NEW.booking_reference) = '' THEN
+    NEW.booking_reference :=
+      'DF-' || LPAD(
+        nextval('public.booking_reference_seq')::TEXT,
+        4,
+        '0'
+      );
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."generate_booking_reference"() OWNER TO "postgres";
+
+--
+-- Name: get_event_availability("date", "date"); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION "public"."get_event_availability"("p_start_date" "date", "p_end_date" "date") RETURNS TABLE("event_date" "date", "available" boolean, "reason" "text")
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+    SELECT
+        dates.event_date,
+        CASE
+            WHEN bd.event_date IS NOT NULL THEN false
+            WHEN b.event_date IS NOT NULL THEN false
+            ELSE true
+        END AS available,
+        CASE
+            WHEN bd.event_date IS NOT NULL THEN 'owner_blocked'
+            WHEN b.event_date IS NOT NULL THEN 'booked'
+            ELSE NULL
+        END AS reason
+    FROM generate_series(
+        p_start_date,
+        p_end_date,
+        INTERVAL '1 day'
+    ) AS dates(event_date)
+    LEFT JOIN public.blocked_dates bd
+        ON bd.event_date = dates.event_date
+    LEFT JOIN (
+        SELECT DISTINCT event_date
+        FROM public.bookings
+        WHERE LOWER(COALESCE(status, '')) IN ('pending', 'confirmed')
+    ) b
+        ON b.event_date = dates.event_date
+    ORDER BY dates.event_date;
+$$;
+
+
+ALTER FUNCTION "public"."get_event_availability"("p_start_date" "date", "p_end_date" "date") OWNER TO "postgres";
+
+--
+-- Name: handle_new_user(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$BEGIN
+  INSERT INTO public.profiles (
+    id,
+    email,
+    full_name,
+    role
+  )
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+    'user'
+  )
+  ON CONFLICT (id) DO NOTHING;
+
+  RETURN NEW;
+END;$$;
+
+
+ALTER FUNCTION "public"."handle_new_user"() OWNER TO "postgres";
+
+--
+-- Name: is_admin(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION "public"."is_admin"() RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.profiles
+    WHERE id = auth.uid()
+      AND role IN ('admin', 'owner')
+  );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."is_admin"() OWNER TO "postgres";
+
+--
+-- Name: is_owner(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION "public"."is_owner"() RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.profiles
+    WHERE id = auth.uid()
+      AND role = 'owner'
+  );
+END;
+$$;
+
+
+ALTER FUNCTION "public"."is_owner"() OWNER TO "postgres";
+
+--
+-- Name: prevent_booking_on_blocked_date(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION "public"."prevent_booking_on_blocked_date"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+    IF LOWER(COALESCE(NEW.status, 'pending')) IN ('pending', 'confirmed')
+       AND EXISTS (
+           SELECT 1
+           FROM public.blocked_dates
+           WHERE event_date = NEW.event_date
+       )
+    THEN
+        RAISE EXCEPTION
+            'This date is unavailable. Please select another event date.';
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."prevent_booking_on_blocked_date"() OWNER TO "postgres";
+
+--
+-- Name: prevent_role_escalation(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION "public"."prevent_role_escalation"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF NEW.role IS DISTINCT FROM OLD.role THEN
+    IF NOT public.is_owner() THEN
+      RAISE EXCEPTION 'Only the owner can change user roles.';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."prevent_role_escalation"() OWNER TO "postgres";
+
+--
+-- Name: purge_archived_bookings(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION "public"."purge_archived_bookings"() RETURNS integer
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+DECLARE
+  booking_record record;
+  purged_count integer := 0;
+  purged_at timestamptz;
+BEGIN
+  FOR booking_record IN
+    SELECT
+      id,
+      booking_reference,
+      event_date,
+      archived_at
+    FROM public.bookings
+    WHERE status = 'archived'
+      AND archived_at IS NOT NULL
+      AND archived_at <= pg_catalog.now() - interval '6 months'
+    FOR UPDATE SKIP LOCKED
+  LOOP
+    BEGIN
+      IF EXISTS (
+        SELECT 1
+        FROM public.payments
+        WHERE booking_id = booking_record.id
+      ) THEN
+        CONTINUE;
+      END IF;
+
+      purged_at := pg_catalog.now();
+
+      DELETE FROM public.bookings
+      WHERE id = booking_record.id
+        AND status = 'archived'
+        AND archived_at IS NOT NULL
+        AND archived_at <= pg_catalog.now() - interval '6 months'
+        AND NOT EXISTS (
+          SELECT 1
+          FROM public.payments
+          WHERE booking_id = booking_record.id
+        );
+
+      IF FOUND THEN
+        INSERT INTO public.audit_logs (
+          actor_user_id,
+          action,
+          target_user_id,
+          metadata,
+          created_at
+        )
+        VALUES (
+          NULL,
+          'booking.auto_purged',
+          NULL,
+          pg_catalog.jsonb_build_object(
+            'booking_reference', booking_record.booking_reference,
+            'event_date', booking_record.event_date,
+            'archived_at', booking_record.archived_at,
+            'purged_at', purged_at
+          ),
+          purged_at
+        );
+
+        purged_count := purged_count + 1;
+      END IF;
+
+    EXCEPTION WHEN OTHERS THEN
+      RAISE WARNING
+        'Archived booking purge failed for %: %',
+        booking_record.id,
+        SQLERRM;
+    END;
+  END LOOP;
+
+  RETURN purged_count;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."purge_archived_bookings"() OWNER TO "postgres";
+
+--
+-- Name: rls_auto_enable(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION "public"."rls_auto_enable"() RETURNS "event_trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'pg_catalog'
+    AS $$
+DECLARE
+  cmd record;
+BEGIN
+  FOR cmd IN
+    SELECT *
+    FROM pg_event_trigger_ddl_commands()
+    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      AND object_type IN ('table','partitioned table')
+  LOOP
+     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN
+      BEGIN
+        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);
+        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
+      END;
+     ELSE
+        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
+     END IF;
+  END LOOP;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."rls_auto_enable"() OWNER TO "postgres";
+
+--
+-- Name: unblock_event_date("date"); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION "public"."unblock_event_date"("p_event_date" "date") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+    DELETE FROM public.blocked_dates
+    WHERE event_date = p_event_date;
+
+    RETURN TRUE;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."unblock_event_date"("p_event_date" "date") OWNER TO "postgres";
+
+--
+-- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: postgres
+--
+
+CREATE FUNCTION "public"."update_updated_at_column"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public'
+    AS $$
+BEGIN
+  NEW.updated_at = timezone('utc', now());
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."update_updated_at_column"() OWNER TO "postgres";
+
+SET default_table_access_method = "heap";
+
+--
+-- Name: audit_logs; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE "public"."audit_logs" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "actor_user_id" "uuid",
+    "action" "text" NOT NULL,
+    "target_user_id" "uuid",
+    "metadata" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."audit_logs" OWNER TO "postgres";
+
+--
+-- Name: blocked_dates; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE "public"."blocked_dates" (
+    "event_date" "date" NOT NULL,
+    "note" "text",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "created_by" "uuid"
+);
+
+
+ALTER TABLE "public"."blocked_dates" OWNER TO "postgres";
+
+--
+-- Name: booking_reference_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE "public"."booking_reference_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE "public"."booking_reference_seq" OWNER TO "postgres";
+
+--
+-- Name: bookings; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE "public"."bookings" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid",
+    "full_name" "text" NOT NULL,
+    "email" "text" NOT NULL,
+    "phone" "text",
+    "event_date" "date" NOT NULL,
+    "event_location" "text" NOT NULL,
+    "services_requested" "text"[] DEFAULT '{}'::"text"[] NOT NULL,
+    "estimated_guest_count" integer,
+    "celebration_details" "text",
+    "status" "text" DEFAULT 'pending'::"text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "booking_amount" numeric DEFAULT 0 NOT NULL,
+    "currency" "text" DEFAULT 'GBP'::"text" NOT NULL,
+    "booking_reference" "text",
+    "completed_at" timestamp with time zone,
+    "archived_at" timestamp with time zone,
+    CONSTRAINT "bookings_booking_amount_check" CHECK (("booking_amount" >= (0)::numeric))
+);
+
+
+ALTER TABLE "public"."bookings" OWNER TO "postgres";
+
+--
+-- Name: gallery; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE "public"."gallery" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "title" "text" NOT NULL,
+    "image_url" "text" NOT NULL,
+    "alt_text" "text" NOT NULL,
+    "category" "text" DEFAULT 'all'::"text" NOT NULL,
+    "caption" "text",
+    "aspect_ratio" "text" DEFAULT '4/3'::"text" NOT NULL,
+    "is_featured" boolean DEFAULT false NOT NULL,
+    "display_order" integer DEFAULT 0 NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL
+);
+
+
+ALTER TABLE "public"."gallery" OWNER TO "postgres";
+
+--
+-- Name: messages; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE "public"."messages" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid",
+    "full_name" "text" NOT NULL,
+    "email" "text" NOT NULL,
+    "phone" "text",
+    "subject" "text",
+    "message" "text" NOT NULL,
+    "status" "text" DEFAULT 'unread'::"text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL
+);
+
+
+ALTER TABLE "public"."messages" OWNER TO "postgres";
+
+--
+-- Name: payments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE "public"."payments" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "booking_id" "uuid" NOT NULL,
+    "user_id" "uuid",
+    "amount" numeric(12,2) NOT NULL,
+    "currency" "text" DEFAULT 'NGN'::"text" NOT NULL,
+    "payment_type" "text" DEFAULT 'deposit'::"text" NOT NULL,
+    "provider" "text" NOT NULL,
+    "status" "text" DEFAULT 'pending'::"text" NOT NULL,
+    "gateway_reference" "text",
+    "gateway_transaction_id" "text",
+    "payment_method" "text",
+    "customer_email" "text",
+    "metadata" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "paid_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    CONSTRAINT "payments_amount_check" CHECK (("amount" > (0)::numeric)),
+    CONSTRAINT "payments_currency_check" CHECK (("currency" = ANY (ARRAY['NGN'::"text", 'USD'::"text", 'GBP'::"text", 'EUR'::"text"]))),
+    CONSTRAINT "payments_payment_type_check" CHECK (("payment_type" = ANY (ARRAY['deposit'::"text", 'balance'::"text", 'full'::"text", 'refund'::"text"]))),
+    CONSTRAINT "payments_provider_check" CHECK (("provider" = ANY (ARRAY['paystack'::"text", 'flutterwave'::"text", 'manual'::"text"]))),
+    CONSTRAINT "payments_status_check" CHECK (("status" = ANY (ARRAY['pending'::"text", 'processing'::"text", 'successful'::"text", 'failed'::"text", 'cancelled'::"text", 'refunded'::"text", 'partially_refunded'::"text"])))
+);
+
+
+ALTER TABLE "public"."payments" OWNER TO "postgres";
+
+--
+-- Name: permissions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE "public"."permissions" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "permission_key" "text" NOT NULL,
+    "description" "text",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."permissions" OWNER TO "postgres";
+
+--
+-- Name: profiles; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE "public"."profiles" (
+    "id" "uuid" NOT NULL,
+    "email" "text",
+    "full_name" "text",
+    "role" "text" DEFAULT 'staff'::"text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "is_active" boolean DEFAULT true NOT NULL,
+    CONSTRAINT "profiles_role_check" CHECK (("role" = ANY (ARRAY['owner'::"text", 'admin'::"text", 'staff'::"text", 'user'::"text"])))
+);
+
+
+ALTER TABLE "public"."profiles" OWNER TO "postgres";
+
+--
+-- Name: services; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE "public"."services" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "slug" "text" NOT NULL,
+    "title" "text" NOT NULL,
+    "yoruba_name" "text",
+    "short_description" "text" NOT NULL,
+    "full_description" "text",
+    "category" "text" DEFAULT 'core'::"text" NOT NULL,
+    "icon_name" "text",
+    "is_active" boolean DEFAULT true NOT NULL,
+    "display_order" integer DEFAULT 0 NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL
+);
+
+
+ALTER TABLE "public"."services" OWNER TO "postgres";
+
+--
+-- Name: site_settings; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE "public"."site_settings" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "key" "text" NOT NULL,
+    "value" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "description" "text",
+    "updated_by" "uuid",
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL
+);
+
+
+ALTER TABLE "public"."site_settings" OWNER TO "postgres";
+
+--
+-- Name: testimonials; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE "public"."testimonials" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "quote" "text" NOT NULL,
+    "client_names" "text" NOT NULL,
+    "event_type" "text" NOT NULL,
+    "location" "text",
+    "event_date" "date",
+    "rating" integer DEFAULT 5 NOT NULL,
+    "is_featured" boolean DEFAULT true NOT NULL,
+    "is_placeholder" boolean DEFAULT false NOT NULL,
+    "display_order" integer DEFAULT 0 NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "timezone"('utc'::"text", "now"()) NOT NULL
+);
+
+
+ALTER TABLE "public"."testimonials" OWNER TO "postgres";
+
+--
+-- Name: user_permissions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE "public"."user_permissions" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "permission_key" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."user_permissions" OWNER TO "postgres";
+
+--
+-- Name: audit_logs audit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."audit_logs"
+    ADD CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: blocked_dates blocked_dates_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."blocked_dates"
+    ADD CONSTRAINT "blocked_dates_pkey" PRIMARY KEY ("event_date");
+
+
+--
+-- Name: bookings bookings_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."bookings"
+    ADD CONSTRAINT "bookings_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: gallery gallery_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."gallery"
+    ADD CONSTRAINT "gallery_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: messages messages_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."messages"
+    ADD CONSTRAINT "messages_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: payments payments_gateway_reference_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."payments"
+    ADD CONSTRAINT "payments_gateway_reference_key" UNIQUE ("gateway_reference");
+
+
+--
+-- Name: payments payments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."payments"
+    ADD CONSTRAINT "payments_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: permissions permissions_permission_key_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."permissions"
+    ADD CONSTRAINT "permissions_permission_key_key" UNIQUE ("permission_key");
+
+
+--
+-- Name: permissions permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."permissions"
+    ADD CONSTRAINT "permissions_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: profiles profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."profiles"
+    ADD CONSTRAINT "profiles_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: services services_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."services"
+    ADD CONSTRAINT "services_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: services services_slug_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."services"
+    ADD CONSTRAINT "services_slug_key" UNIQUE ("slug");
+
+
+--
+-- Name: site_settings site_settings_key_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."site_settings"
+    ADD CONSTRAINT "site_settings_key_key" UNIQUE ("key");
+
+
+--
+-- Name: site_settings site_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."site_settings"
+    ADD CONSTRAINT "site_settings_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: testimonials testimonials_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."testimonials"
+    ADD CONSTRAINT "testimonials_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: user_permissions user_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."user_permissions"
+    ADD CONSTRAINT "user_permissions_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: user_permissions user_permissions_user_permission_key_unique; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."user_permissions"
+    ADD CONSTRAINT "user_permissions_user_permission_key_unique" UNIQUE ("user_id", "permission_key");
+
+
+--
+-- Name: blocked_dates_event_date_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "blocked_dates_event_date_idx" ON "public"."blocked_dates" USING "btree" ("event_date");
+
+
+--
+-- Name: bookings_active_event_date_unique; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "bookings_active_event_date_unique" ON "public"."bookings" USING "btree" ("event_date") WHERE ("lower"(COALESCE("status", ''::"text")) = ANY (ARRAY['pending'::"text", 'confirmed'::"text"]));
+
+
+--
+-- Name: bookings_archived_at_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "bookings_archived_at_idx" ON "public"."bookings" USING "btree" ("archived_at") WHERE ("archived_at" IS NOT NULL);
+
+
+--
+-- Name: bookings_booking_reference_unique; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX "bookings_booking_reference_unique" ON "public"."bookings" USING "btree" ("booking_reference") WHERE ("booking_reference" IS NOT NULL);
+
+
+--
+-- Name: idx_audit_logs_actor_user_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_audit_logs_actor_user_id" ON "public"."audit_logs" USING "btree" ("actor_user_id");
+
+
+--
+-- Name: idx_audit_logs_created_at; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_audit_logs_created_at" ON "public"."audit_logs" USING "btree" ("created_at" DESC);
+
+
+--
+-- Name: idx_audit_logs_target_user_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_audit_logs_target_user_id" ON "public"."audit_logs" USING "btree" ("target_user_id");
+
+
+--
+-- Name: idx_bookings_email; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_bookings_email" ON "public"."bookings" USING "btree" ("email");
+
+
+--
+-- Name: idx_bookings_event_date; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_bookings_event_date" ON "public"."bookings" USING "btree" ("event_date");
+
+
+--
+-- Name: idx_bookings_status; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_bookings_status" ON "public"."bookings" USING "btree" ("status");
+
+
+--
+-- Name: idx_gallery_category; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_gallery_category" ON "public"."gallery" USING "btree" ("category");
+
+
+--
+-- Name: idx_gallery_display_order; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_gallery_display_order" ON "public"."gallery" USING "btree" ("display_order");
+
+
+--
+-- Name: idx_messages_email; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_messages_email" ON "public"."messages" USING "btree" ("email");
+
+
+--
+-- Name: idx_messages_status; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_messages_status" ON "public"."messages" USING "btree" ("status");
+
+
+--
+-- Name: idx_profiles_role; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_profiles_role" ON "public"."profiles" USING "btree" ("role");
+
+
+--
+-- Name: idx_services_category; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_services_category" ON "public"."services" USING "btree" ("category");
+
+
+--
+-- Name: idx_services_slug; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_services_slug" ON "public"."services" USING "btree" ("slug");
+
+
+--
+-- Name: idx_site_settings_key; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_site_settings_key" ON "public"."site_settings" USING "btree" ("key");
+
+
+--
+-- Name: idx_testimonials_display_order; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_testimonials_display_order" ON "public"."testimonials" USING "btree" ("display_order");
+
+
+--
+-- Name: idx_user_permissions_permission_key; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_user_permissions_permission_key" ON "public"."user_permissions" USING "btree" ("permission_key");
+
+
+--
+-- Name: idx_user_permissions_user_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "idx_user_permissions_user_id" ON "public"."user_permissions" USING "btree" ("user_id");
+
+
+--
+-- Name: payments_booking_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "payments_booking_id_idx" ON "public"."payments" USING "btree" ("booking_id");
+
+
+--
+-- Name: payments_created_at_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "payments_created_at_idx" ON "public"."payments" USING "btree" ("created_at" DESC);
+
+
+--
+-- Name: payments_status_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "payments_status_idx" ON "public"."payments" USING "btree" ("status");
+
+
+--
+-- Name: payments_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX "payments_user_id_idx" ON "public"."payments" USING "btree" ("user_id");
+
+
+--
+-- Name: bookings prevent_booking_on_blocked_date_trigger; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER "prevent_booking_on_blocked_date_trigger" BEFORE INSERT OR UPDATE OF "event_date", "status" ON "public"."bookings" FOR EACH ROW EXECUTE FUNCTION "public"."prevent_booking_on_blocked_date"();
+
+
+--
+-- Name: bookings trg_bookings_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER "trg_bookings_updated_at" BEFORE UPDATE ON "public"."bookings" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+--
+-- Name: gallery trg_gallery_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER "trg_gallery_updated_at" BEFORE UPDATE ON "public"."gallery" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+--
+-- Name: messages trg_messages_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER "trg_messages_updated_at" BEFORE UPDATE ON "public"."messages" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+--
+-- Name: profiles trg_prevent_role_escalation; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER "trg_prevent_role_escalation" BEFORE UPDATE ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."prevent_role_escalation"();
+
+
+--
+-- Name: profiles trg_profiles_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER "trg_profiles_updated_at" BEFORE UPDATE ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+--
+-- Name: services trg_services_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER "trg_services_updated_at" BEFORE UPDATE ON "public"."services" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+--
+-- Name: site_settings trg_site_settings_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER "trg_site_settings_updated_at" BEFORE UPDATE ON "public"."site_settings" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+--
+-- Name: testimonials trg_testimonials_updated_at; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER "trg_testimonials_updated_at" BEFORE UPDATE ON "public"."testimonials" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+--
+-- Name: bookings trigger_generate_booking_reference; Type: TRIGGER; Schema: public; Owner: postgres
+--
+
+CREATE TRIGGER "trigger_generate_booking_reference" BEFORE INSERT ON "public"."bookings" FOR EACH ROW EXECUTE FUNCTION "public"."generate_booking_reference"();
+
+
+--
+-- Name: audit_logs audit_logs_actor_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."audit_logs"
+    ADD CONSTRAINT "audit_logs_actor_user_id_fkey" FOREIGN KEY ("actor_user_id") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
+
+
+--
+-- Name: audit_logs audit_logs_target_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."audit_logs"
+    ADD CONSTRAINT "audit_logs_target_user_id_fkey" FOREIGN KEY ("target_user_id") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
+
+
+--
+-- Name: blocked_dates blocked_dates_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."blocked_dates"
+    ADD CONSTRAINT "blocked_dates_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
+
+
+--
+-- Name: bookings bookings_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."bookings"
+    ADD CONSTRAINT "bookings_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
+
+
+--
+-- Name: messages messages_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."messages"
+    ADD CONSTRAINT "messages_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
+
+
+--
+-- Name: payments payments_booking_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."payments"
+    ADD CONSTRAINT "payments_booking_id_fkey" FOREIGN KEY ("booking_id") REFERENCES "public"."bookings"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: payments payments_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."payments"
+    ADD CONSTRAINT "payments_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
+
+
+--
+-- Name: profiles profiles_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."profiles"
+    ADD CONSTRAINT "profiles_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: site_settings site_settings_updated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."site_settings"
+    ADD CONSTRAINT "site_settings_updated_by_fkey" FOREIGN KEY ("updated_by") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
+
+
+--
+-- Name: user_permissions user_permissions_permission_key_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."user_permissions"
+    ADD CONSTRAINT "user_permissions_permission_key_fkey" FOREIGN KEY ("permission_key") REFERENCES "public"."permissions"("permission_key") ON DELETE CASCADE;
+
+
+--
+-- Name: user_permissions user_permissions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY "public"."user_permissions"
+    ADD CONSTRAINT "user_permissions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: services Admin write services; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admin write services" ON "public"."services" TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: payments Admins can insert payments; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins can insert payments" ON "public"."payments" FOR INSERT TO "authenticated" WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: bookings Admins can update bookings; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins can update bookings" ON "public"."bookings" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: payments Admins can update payments; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins can update payments" ON "public"."payments" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: profiles Admins can update profiles; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins can update profiles" ON "public"."profiles" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: bookings Admins can view all bookings; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins can view all bookings" ON "public"."bookings" FOR SELECT TO "authenticated" USING ("public"."is_admin"());
+
+
+--
+-- Name: payments Admins can view all payments; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins can view all payments" ON "public"."payments" FOR SELECT TO "authenticated" USING ("public"."is_admin"());
+
+
+--
+-- Name: profiles Admins can view all profiles; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins can view all profiles" ON "public"."profiles" FOR SELECT TO "authenticated" USING ("public"."is_admin"());
+
+
+--
+-- Name: blocked_dates Admins delete blocked dates; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins delete blocked dates" ON "public"."blocked_dates" FOR DELETE TO "authenticated" USING ("public"."is_admin"());
+
+
+--
+-- Name: bookings Admins delete bookings; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins delete bookings" ON "public"."bookings" FOR DELETE TO "authenticated" USING (("public"."is_admin"() AND (EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."is_active" = true))))));
+
+
+--
+-- Name: blocked_dates Admins insert blocked dates; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins insert blocked dates" ON "public"."blocked_dates" FOR INSERT TO "authenticated" WITH CHECK (("public"."is_admin"() AND ("created_by" = "auth"."uid"())));
+
+
+--
+-- Name: site_settings Admins insert site_settings; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins insert site_settings" ON "public"."site_settings" FOR INSERT TO "authenticated" WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: gallery Admins manage gallery; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins manage gallery" ON "public"."gallery" TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: services Admins manage services; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins manage services" ON "public"."services" TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: site_settings Admins manage site settings; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins manage site settings" ON "public"."site_settings" TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: testimonials Admins manage testimonials; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins manage testimonials" ON "public"."testimonials" TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: bookings Admins modify bookings; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins modify bookings" ON "public"."bookings" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: blocked_dates Admins read blocked dates; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins read blocked dates" ON "public"."blocked_dates" FOR SELECT TO "authenticated" USING ("public"."is_admin"());
+
+
+--
+-- Name: bookings Admins read bookings; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins read bookings" ON "public"."bookings" FOR SELECT TO "authenticated" USING ("public"."is_admin"());
+
+
+--
+-- Name: messages Admins read messages; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins read messages" ON "public"."messages" FOR SELECT TO "authenticated" USING ("public"."is_admin"());
+
+
+--
+-- Name: site_settings Admins read site_settings; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins read site_settings" ON "public"."site_settings" FOR SELECT TO "authenticated" USING ("public"."is_admin"());
+
+
+--
+-- Name: blocked_dates Admins update blocked dates; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins update blocked dates" ON "public"."blocked_dates" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: bookings Admins update bookings; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins update bookings" ON "public"."bookings" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: messages Admins update messages; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins update messages" ON "public"."messages" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: site_settings Admins update site_settings; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Admins update site_settings" ON "public"."site_settings" FOR UPDATE TO "authenticated" USING ("public"."is_admin"()) WITH CHECK ("public"."is_admin"());
+
+
+--
+-- Name: blocked_dates Public can view blocked dates; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Public can view blocked dates" ON "public"."blocked_dates" FOR SELECT TO "authenticated", "anon" USING (true);
+
+
+--
+-- Name: services Public read services; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Public read services" ON "public"."services" FOR SELECT USING (true);
+
+
+--
+-- Name: bookings Users can view their own bookings; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Users can view their own bookings" ON "public"."bookings" FOR SELECT TO "authenticated" USING (("user_id" = "auth"."uid"()));
+
+
+--
+-- Name: payments Users can view their own payments; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Users can view their own payments" ON "public"."payments" FOR SELECT TO "authenticated" USING (("user_id" = "auth"."uid"()));
+
+
+--
+-- Name: profiles Users can view their own profile; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Users can view their own profile" ON "public"."profiles" FOR SELECT TO "authenticated" USING (("id" = "auth"."uid"()));
+
+
+--
+-- Name: profiles Users update profile; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Users update profile" ON "public"."profiles" FOR UPDATE TO "authenticated" USING ((("id" = "auth"."uid"()) OR "public"."is_admin"())) WITH CHECK ((("id" = "auth"."uid"()) OR "public"."is_admin"()));
+
+
+--
+-- Name: profiles Users view profile; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "Users view profile" ON "public"."profiles" FOR SELECT TO "authenticated" USING ((("id" = "auth"."uid"()) OR "public"."is_admin"()));
+
+
+--
+-- Name: audit_logs; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."audit_logs" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: audit_logs audit_logs_read_active_owner; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "audit_logs_read_active_owner" ON "public"."audit_logs" FOR SELECT TO "authenticated" USING (("public"."is_owner"() AND (EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."is_active" = true))))));
+
+
+--
+-- Name: blocked_dates; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."blocked_dates" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: bookings; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."bookings" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: gallery; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."gallery" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: messages; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."messages" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: payments; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."payments" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: permissions; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."permissions" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: permissions permissions_read_active_owner_admin; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "permissions_read_active_owner_admin" ON "public"."permissions" FOR SELECT TO "authenticated" USING ((("public"."is_owner"() OR "public"."is_admin"()) AND (EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."is_active" = true))))));
+
+
+--
+-- Name: profiles; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: services; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."services" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: site_settings; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."site_settings" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: testimonials; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."testimonials" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: user_permissions; Type: ROW SECURITY; Schema: public; Owner: postgres
+--
+
+ALTER TABLE "public"."user_permissions" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: user_permissions user_permissions_manage_active_owner_admin; Type: POLICY; Schema: public; Owner: postgres
+--
+
+CREATE POLICY "user_permissions_manage_active_owner_admin" ON "public"."user_permissions" TO "authenticated" USING ((("public"."is_owner"() OR "public"."is_admin"()) AND (EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."is_active" = true)))))) WITH CHECK ((("public"."is_owner"() OR "public"."is_admin"()) AND (EXISTS ( SELECT 1
+   FROM "public"."profiles"
+  WHERE (("profiles"."id" = "auth"."uid"()) AND ("profiles"."is_active" = true))))));
+
+
+--
+-- Name: SCHEMA "public"; Type: ACL; Schema: -; Owner: pg_database_owner
+--
+
+GRANT USAGE ON SCHEMA "public" TO "postgres";
+GRANT USAGE ON SCHEMA "public" TO "anon";
+GRANT USAGE ON SCHEMA "public" TO "authenticated";
+GRANT USAGE ON SCHEMA "public" TO "service_role";
+
+
+--
+-- Name: FUNCTION "block_event_date"("p_event_date" "date", "p_note" "text"); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION "public"."block_event_date"("p_event_date" "date", "p_note" "text") FROM PUBLIC;
+
+
+--
+-- Name: FUNCTION "get_event_availability"("p_start_date" "date", "p_end_date" "date"); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION "public"."get_event_availability"("p_start_date" "date", "p_end_date" "date") FROM PUBLIC;
+
+
+--
+-- Name: FUNCTION "handle_new_user"(); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION "public"."handle_new_user"() FROM PUBLIC;
+
+
+--
+-- Name: FUNCTION "is_admin"(); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION "public"."is_admin"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."is_admin"() TO "authenticated";
+
+
+--
+-- Name: FUNCTION "is_owner"(); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION "public"."is_owner"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."is_owner"() TO "authenticated";
+
+
+--
+-- Name: FUNCTION "prevent_booking_on_blocked_date"(); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION "public"."prevent_booking_on_blocked_date"() FROM PUBLIC;
+
+
+--
+-- Name: FUNCTION "prevent_role_escalation"(); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION "public"."prevent_role_escalation"() FROM PUBLIC;
+
+
+--
+-- Name: FUNCTION "purge_archived_bookings"(); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION "public"."purge_archived_bookings"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."purge_archived_bookings"() TO "service_role";
+
+
+--
+-- Name: FUNCTION "rls_auto_enable"(); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION "public"."rls_auto_enable"() FROM PUBLIC;
+
+
+--
+-- Name: FUNCTION "unblock_event_date"("p_event_date" "date"); Type: ACL; Schema: public; Owner: postgres
+--
+
+REVOKE ALL ON FUNCTION "public"."unblock_event_date"("p_event_date" "date") FROM PUBLIC;
+
+
+--
+-- Name: TABLE "audit_logs"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."audit_logs" TO "authenticated";
+GRANT ALL ON TABLE "public"."audit_logs" TO "service_role";
+
+
+--
+-- Name: TABLE "blocked_dates"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."blocked_dates" TO "authenticated";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."blocked_dates" TO "service_role";
+
+
+--
+-- Name: SEQUENCE "booking_reference_seq"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT SELECT,USAGE ON SEQUENCE "public"."booking_reference_seq" TO "anon";
+GRANT SELECT,USAGE ON SEQUENCE "public"."booking_reference_seq" TO "authenticated";
+GRANT SELECT,USAGE ON SEQUENCE "public"."booking_reference_seq" TO "service_role";
+
+
+--
+-- Name: TABLE "bookings"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."bookings" TO "authenticated";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."bookings" TO "service_role";
+
+
+--
+-- Name: TABLE "gallery"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."gallery" TO "authenticated";
+GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."gallery" TO "service_role";
+
+
+--
+-- Name: TABLE "messages"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE "public"."messages" TO "authenticated";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."messages" TO "service_role";
+
+
+--
+-- Name: TABLE "payments"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."payments" TO "authenticated";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."payments" TO "service_role";
+
+
+--
+-- Name: TABLE "permissions"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."permissions" TO "authenticated";
+GRANT ALL ON TABLE "public"."permissions" TO "service_role";
+
+
+--
+-- Name: TABLE "profiles"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."profiles" TO "authenticated";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."profiles" TO "service_role";
+
+
+--
+-- Name: TABLE "services"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."services" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE "public"."services" TO "authenticated";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."services" TO "service_role";
+
+
+--
+-- Name: TABLE "site_settings"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."site_settings" TO "authenticated";
+GRANT SELECT,INSERT,UPDATE ON TABLE "public"."site_settings" TO "service_role";
+
+
+--
+-- Name: TABLE "testimonials"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."testimonials" TO "authenticated";
+GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."testimonials" TO "service_role";
+
+
+--
+-- Name: TABLE "user_permissions"; Type: ACL; Schema: public; Owner: postgres
+--
+
+GRANT ALL ON TABLE "public"."user_permissions" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_permissions" TO "service_role";
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "postgres";
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: supabase_admin
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "postgres";
+ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON SEQUENCES TO "service_role";
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: public; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "postgres";
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: public; Owner: supabase_admin
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "postgres";
+ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON FUNCTIONS TO "service_role";
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: postgres
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES TO "postgres";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLES TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLES TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLES TO "service_role";
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR TABLES; Type: DEFAULT ACL; Schema: public; Owner: supabase_admin
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON TABLES TO "postgres";
+ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON TABLES TO "anon";
+ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON TABLES TO "authenticated";
+ALTER DEFAULT PRIVILEGES FOR ROLE "supabase_admin" IN SCHEMA "public" GRANT ALL ON TABLES TO "service_role";
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+

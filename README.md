@@ -48,11 +48,17 @@ The Supabase anon key is a public client key and must still be protected by the 
 ## Commands
 
 ```bash
-npm run lint    # TypeScript validation
-npm run build   # Vite frontend and bundled Express server
-npm run start   # Run the production server after building
-npm run preview # Preview the Vite build only
+npm run lint         # TypeScript validation (frontend + Express; Deno code is excluded from tsc)
+npm run lint:edge    # deno check of the Supabase Edge Function
+npm test             # node tests (Express e2e, SQL migrations, secret scanner) + Deno Edge Function tests
+npm run scan:secrets # secret scan of the working tree (add -- --dist for the built bundle, -- --history for git history)
+npm run audit:prod   # npm audit for production dependencies
+npm run build        # Vite frontend and bundled Express server (server bundle skipped on Vercel)
+npm run start        # Run the production server after building
+npm run preview      # Preview the Vite build only
 ```
+
+Security design, the production API architecture, client-IP strategy, credential-rotation list and deployment checklist are documented in [docs/SECURITY_ARCHITECTURE.md](docs/SECURITY_ARCHITECTURE.md).
 
 ## API
 

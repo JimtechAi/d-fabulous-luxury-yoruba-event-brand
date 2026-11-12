@@ -5,6 +5,19 @@ import {defineConfig, loadEnv} from 'vite';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
+
+  // Anything prefixed VITE_ is embedded in the public browser bundle. Fail the build loudly if a
+  // server-side secret was accidentally given that prefix.
+  const exposedSecretNames = Object.keys(env).filter((name) =>
+    name.startsWith('VITE_') && /(SERVICE_ROLE|SECRET|PRIVATE|RESEND|PASSWORD|OIDC|ACCESS_TOKEN)/i.test(name)
+  );
+  if (exposedSecretNames.length > 0) {
+    throw new Error(
+      `Refusing to build: ${exposedSecretNames.join(', ')} would be exposed to the browser. ` +
+      'Remove the VITE_ prefix and keep server-side secrets in server-only environment variables.'
+    );
+  }
+
   const supabaseUrl = (
     env.VITE_SUPABASE_URL ||
     env.SUPABASE_URL ||

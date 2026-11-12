@@ -1,0 +1,3348 @@
+{
+  "source": {
+    "file": "supabase/staging/source/production_public_schema.sql",
+    "sha256": "f41bf2fee49c315b0b6806552f512960381c635907cc88a73004b1f708f2ad50",
+    "bytes": 52351,
+    "dumpedFromServer": "17.6",
+    "dumpedByPgDump": "17.11"
+  },
+  "tables": {
+    "audit_logs": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "generated": null
+        },
+        {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "action",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "target_user_id",
+          "type": "uuid",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "nullable": false,
+          "default": "'{}'::jsonb",
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()",
+          "generated": null
+        }
+      ],
+      "rls": {
+        "enabled": true,
+        "forced": false
+      },
+      "owner": "postgres"
+    },
+    "blocked_dates": {
+      "columns": [
+        {
+          "name": "event_date",
+          "type": "date",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "note",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()",
+          "generated": null
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        }
+      ],
+      "rls": {
+        "enabled": true,
+        "forced": false
+      },
+      "owner": "postgres"
+    },
+    "bookings": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "generated": null
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "full_name",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "event_date",
+          "type": "date",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "event_location",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "services_requested",
+          "type": "text[]",
+          "nullable": false,
+          "default": "'{}'::text[]",
+          "generated": null
+        },
+        {
+          "name": "estimated_guest_count",
+          "type": "integer",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "celebration_details",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "nullable": false,
+          "default": "'pending'::text",
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "timezone('utc'::text, now())",
+          "generated": null
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "timezone('utc'::text, now())",
+          "generated": null
+        },
+        {
+          "name": "booking_amount",
+          "type": "numeric",
+          "nullable": false,
+          "default": "0",
+          "generated": null
+        },
+        {
+          "name": "currency",
+          "type": "text",
+          "nullable": false,
+          "default": "'GBP'::text",
+          "generated": null
+        },
+        {
+          "name": "booking_reference",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "completed_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "archived_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        }
+      ],
+      "rls": {
+        "enabled": true,
+        "forced": false
+      },
+      "owner": "postgres"
+    },
+    "gallery": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "generated": null
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "image_url",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "alt_text",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "nullable": false,
+          "default": "'all'::text",
+          "generated": null
+        },
+        {
+          "name": "caption",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "aspect_ratio",
+          "type": "text",
+          "nullable": false,
+          "default": "'4/3'::text",
+          "generated": null
+        },
+        {
+          "name": "is_featured",
+          "type": "boolean",
+          "nullable": false,
+          "default": "false",
+          "generated": null
+        },
+        {
+          "name": "display_order",
+          "type": "integer",
+          "nullable": false,
+          "default": "0",
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "timezone('utc'::text, now())",
+          "generated": null
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "timezone('utc'::text, now())",
+          "generated": null
+        }
+      ],
+      "rls": {
+        "enabled": true,
+        "forced": false
+      },
+      "owner": "postgres"
+    },
+    "messages": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "generated": null
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "full_name",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "subject",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "message",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "nullable": false,
+          "default": "'unread'::text",
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "timezone('utc'::text, now())",
+          "generated": null
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "timezone('utc'::text, now())",
+          "generated": null
+        }
+      ],
+      "rls": {
+        "enabled": true,
+        "forced": false
+      },
+      "owner": "postgres"
+    },
+    "payments": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "generated": null
+        },
+        {
+          "name": "booking_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "amount",
+          "type": "numeric(12,2)",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "currency",
+          "type": "text",
+          "nullable": false,
+          "default": "'NGN'::text",
+          "generated": null
+        },
+        {
+          "name": "payment_type",
+          "type": "text",
+          "nullable": false,
+          "default": "'deposit'::text",
+          "generated": null
+        },
+        {
+          "name": "provider",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "nullable": false,
+          "default": "'pending'::text",
+          "generated": null
+        },
+        {
+          "name": "gateway_reference",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "gateway_transaction_id",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "payment_method",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "customer_email",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "nullable": false,
+          "default": "'{}'::jsonb",
+          "generated": null
+        },
+        {
+          "name": "paid_at",
+          "type": "timestamp with time zone",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "timezone('utc'::text, now())",
+          "generated": null
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "timezone('utc'::text, now())",
+          "generated": null
+        }
+      ],
+      "rls": {
+        "enabled": true,
+        "forced": false
+      },
+      "owner": "postgres"
+    },
+    "permissions": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "generated": null
+        },
+        {
+          "name": "permission_key",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()",
+          "generated": null
+        }
+      ],
+      "rls": {
+        "enabled": true,
+        "forced": false
+      },
+      "owner": "postgres"
+    },
+    "profiles": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "full_name",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "role",
+          "type": "text",
+          "nullable": false,
+          "default": "'staff'::text",
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()",
+          "generated": null
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()",
+          "generated": null
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": false,
+          "default": "true",
+          "generated": null
+        }
+      ],
+      "rls": {
+        "enabled": true,
+        "forced": false
+      },
+      "owner": "postgres"
+    },
+    "services": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "generated": null
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "yoruba_name",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "short_description",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "full_description",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "nullable": false,
+          "default": "'core'::text",
+          "generated": null
+        },
+        {
+          "name": "icon_name",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "nullable": false,
+          "default": "true",
+          "generated": null
+        },
+        {
+          "name": "display_order",
+          "type": "integer",
+          "nullable": false,
+          "default": "0",
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "timezone('utc'::text, now())",
+          "generated": null
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "timezone('utc'::text, now())",
+          "generated": null
+        }
+      ],
+      "rls": {
+        "enabled": true,
+        "forced": false
+      },
+      "owner": "postgres"
+    },
+    "site_settings": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "generated": null
+        },
+        {
+          "name": "key",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "value",
+          "type": "jsonb",
+          "nullable": false,
+          "default": "'{}'::jsonb",
+          "generated": null
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "timezone('utc'::text, now())",
+          "generated": null
+        }
+      ],
+      "rls": {
+        "enabled": true,
+        "forced": false
+      },
+      "owner": "postgres"
+    },
+    "testimonials": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "generated": null
+        },
+        {
+          "name": "quote",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "client_names",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "event_type",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "location",
+          "type": "text",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "event_date",
+          "type": "date",
+          "nullable": true,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "rating",
+          "type": "integer",
+          "nullable": false,
+          "default": "5",
+          "generated": null
+        },
+        {
+          "name": "is_featured",
+          "type": "boolean",
+          "nullable": false,
+          "default": "true",
+          "generated": null
+        },
+        {
+          "name": "is_placeholder",
+          "type": "boolean",
+          "nullable": false,
+          "default": "false",
+          "generated": null
+        },
+        {
+          "name": "display_order",
+          "type": "integer",
+          "nullable": false,
+          "default": "0",
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "timezone('utc'::text, now())",
+          "generated": null
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "timezone('utc'::text, now())",
+          "generated": null
+        }
+      ],
+      "rls": {
+        "enabled": true,
+        "forced": false
+      },
+      "owner": "postgres"
+    },
+    "user_permissions": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "default": "gen_random_uuid()",
+          "generated": null
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "permission_key",
+          "type": "text",
+          "nullable": false,
+          "default": null,
+          "generated": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "nullable": false,
+          "default": "now()",
+          "generated": null
+        }
+      ],
+      "rls": {
+        "enabled": true,
+        "forced": false
+      },
+      "owner": "postgres"
+    }
+  },
+  "sequences": {
+    "booking_reference_seq": {
+      "definition": "CREATE SEQUENCE public.booking_reference_seq START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1"
+    }
+  },
+  "functions": {
+    "public.block_event_date(date, text)": {
+      "signature": "public.block_event_date(p_event_date date, p_note text DEFAULT NULL::text)",
+      "name": "block_event_date",
+      "returns": "boolean",
+      "language": "plpgsql",
+      "security": "DEFINER",
+      "volatility": "VOLATILE",
+      "searchPath": "public",
+      "owner": "postgres",
+      "executeGrants": [],
+      "revokedFromPublic": true,
+      "references": [
+        "auth.uid",
+        "public.blocked_dates",
+        "public.bookings"
+      ],
+      "bodyLines": 33
+    },
+    "public.generate_booking_reference()": {
+      "signature": "public.generate_booking_reference()",
+      "name": "generate_booking_reference",
+      "returns": "trigger",
+      "language": "plpgsql",
+      "security": "INVOKER",
+      "volatility": "VOLATILE",
+      "searchPath": "public",
+      "owner": "postgres",
+      "executeGrants": [],
+      "revokedFromPublic": false,
+      "references": [
+        "public.booking_reference_seq",
+        "sequence:public.booking_reference_seq"
+      ],
+      "bodyLines": 15
+    },
+    "public.get_event_availability(date, date)": {
+      "signature": "public.get_event_availability(p_start_date date, p_end_date date)",
+      "name": "get_event_availability",
+      "returns": "TABLE(event_date date, available boolean, reason text)",
+      "language": "sql",
+      "security": "DEFINER",
+      "volatility": "STABLE",
+      "searchPath": "public",
+      "owner": "postgres",
+      "executeGrants": [],
+      "revokedFromPublic": true,
+      "references": [
+        "public.blocked_dates",
+        "public.bookings"
+      ],
+      "bodyLines": 28
+    },
+    "public.handle_new_user()": {
+      "signature": "public.handle_new_user()",
+      "name": "handle_new_user",
+      "returns": "trigger",
+      "language": "plpgsql",
+      "security": "DEFINER",
+      "volatility": "VOLATILE",
+      "searchPath": "public",
+      "owner": "postgres",
+      "executeGrants": [],
+      "revokedFromPublic": true,
+      "references": [
+        "public.profiles"
+      ],
+      "bodyLines": 17
+    },
+    "public.is_admin()": {
+      "signature": "public.is_admin()",
+      "name": "is_admin",
+      "returns": "boolean",
+      "language": "plpgsql",
+      "security": "DEFINER",
+      "volatility": "VOLATILE",
+      "searchPath": "public, pg_temp",
+      "owner": "postgres",
+      "executeGrants": [
+        "authenticated"
+      ],
+      "revokedFromPublic": true,
+      "references": [
+        "auth.uid",
+        "public.profiles"
+      ],
+      "bodyLines": 10
+    },
+    "public.is_owner()": {
+      "signature": "public.is_owner()",
+      "name": "is_owner",
+      "returns": "boolean",
+      "language": "plpgsql",
+      "security": "DEFINER",
+      "volatility": "VOLATILE",
+      "searchPath": "public, pg_temp",
+      "owner": "postgres",
+      "executeGrants": [
+        "authenticated"
+      ],
+      "revokedFromPublic": true,
+      "references": [
+        "auth.uid",
+        "public.profiles"
+      ],
+      "bodyLines": 10
+    },
+    "public.prevent_booking_on_blocked_date()": {
+      "signature": "public.prevent_booking_on_blocked_date()",
+      "name": "prevent_booking_on_blocked_date",
+      "returns": "trigger",
+      "language": "plpgsql",
+      "security": "DEFINER",
+      "volatility": "VOLATILE",
+      "searchPath": "public",
+      "owner": "postgres",
+      "executeGrants": [],
+      "revokedFromPublic": true,
+      "references": [
+        "public.blocked_dates"
+      ],
+      "bodyLines": 16
+    },
+    "public.prevent_role_escalation()": {
+      "signature": "public.prevent_role_escalation()",
+      "name": "prevent_role_escalation",
+      "returns": "trigger",
+      "language": "plpgsql",
+      "security": "DEFINER",
+      "volatility": "VOLATILE",
+      "searchPath": "public, pg_temp",
+      "owner": "postgres",
+      "executeGrants": [],
+      "revokedFromPublic": true,
+      "references": [
+        "public.is_owner"
+      ],
+      "bodyLines": 11
+    },
+    "public.purge_archived_bookings()": {
+      "signature": "public.purge_archived_bookings()",
+      "name": "purge_archived_bookings",
+      "returns": "integer",
+      "language": "plpgsql",
+      "security": "DEFINER",
+      "volatility": "VOLATILE",
+      "searchPath": "",
+      "owner": "postgres",
+      "executeGrants": [
+        "service_role"
+      ],
+      "revokedFromPublic": true,
+      "references": [
+        "pg_catalog.jsonb_build_object",
+        "pg_catalog.now",
+        "public.audit_logs",
+        "public.bookings",
+        "public.payments"
+      ],
+      "bodyLines": 75
+    },
+    "public.rls_auto_enable()": {
+      "signature": "public.rls_auto_enable()",
+      "name": "rls_auto_enable",
+      "returns": "event_trigger",
+      "language": "plpgsql",
+      "security": "DEFINER",
+      "volatility": "VOLATILE",
+      "searchPath": "pg_catalog",
+      "owner": "postgres",
+      "executeGrants": [],
+      "revokedFromPublic": true,
+      "references": [
+        "pg_event_trigger_ddl_commands"
+      ],
+      "bodyLines": 24
+    },
+    "public.unblock_event_date(date)": {
+      "signature": "public.unblock_event_date(p_event_date date)",
+      "name": "unblock_event_date",
+      "returns": "boolean",
+      "language": "plpgsql",
+      "security": "DEFINER",
+      "volatility": "VOLATILE",
+      "searchPath": "public",
+      "owner": "postgres",
+      "executeGrants": [],
+      "revokedFromPublic": true,
+      "references": [
+        "public.blocked_dates"
+      ],
+      "bodyLines": 8
+    },
+    "public.update_updated_at_column()": {
+      "signature": "public.update_updated_at_column()",
+      "name": "update_updated_at_column",
+      "returns": "trigger",
+      "language": "plpgsql",
+      "security": "INVOKER",
+      "volatility": "VOLATILE",
+      "searchPath": "public",
+      "owner": "postgres",
+      "executeGrants": [],
+      "revokedFromPublic": false,
+      "references": [],
+      "bodyLines": 6
+    }
+  },
+  "triggers": [
+    {
+      "name": "prevent_booking_on_blocked_date_trigger",
+      "table": "bookings",
+      "timing": "BEFORE",
+      "events": "INSERT OR UPDATE OF event_date, status",
+      "forEach": "ROW",
+      "function": "public.prevent_booking_on_blocked_date()",
+      "definition": "CREATE TRIGGER prevent_booking_on_blocked_date_trigger BEFORE INSERT OR UPDATE OF event_date, status ON public.bookings FOR EACH ROW EXECUTE FUNCTION public.prevent_booking_on_blocked_date()"
+    },
+    {
+      "name": "trg_bookings_updated_at",
+      "table": "bookings",
+      "timing": "BEFORE",
+      "events": "UPDATE",
+      "forEach": "ROW",
+      "function": "public.update_updated_at_column()",
+      "definition": "CREATE TRIGGER trg_bookings_updated_at BEFORE UPDATE ON public.bookings FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column()"
+    },
+    {
+      "name": "trg_gallery_updated_at",
+      "table": "gallery",
+      "timing": "BEFORE",
+      "events": "UPDATE",
+      "forEach": "ROW",
+      "function": "public.update_updated_at_column()",
+      "definition": "CREATE TRIGGER trg_gallery_updated_at BEFORE UPDATE ON public.gallery FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column()"
+    },
+    {
+      "name": "trg_messages_updated_at",
+      "table": "messages",
+      "timing": "BEFORE",
+      "events": "UPDATE",
+      "forEach": "ROW",
+      "function": "public.update_updated_at_column()",
+      "definition": "CREATE TRIGGER trg_messages_updated_at BEFORE UPDATE ON public.messages FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column()"
+    },
+    {
+      "name": "trg_prevent_role_escalation",
+      "table": "profiles",
+      "timing": "BEFORE",
+      "events": "UPDATE",
+      "forEach": "ROW",
+      "function": "public.prevent_role_escalation()",
+      "definition": "CREATE TRIGGER trg_prevent_role_escalation BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.prevent_role_escalation()"
+    },
+    {
+      "name": "trg_profiles_updated_at",
+      "table": "profiles",
+      "timing": "BEFORE",
+      "events": "UPDATE",
+      "forEach": "ROW",
+      "function": "public.update_updated_at_column()",
+      "definition": "CREATE TRIGGER trg_profiles_updated_at BEFORE UPDATE ON public.profiles FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column()"
+    },
+    {
+      "name": "trg_services_updated_at",
+      "table": "services",
+      "timing": "BEFORE",
+      "events": "UPDATE",
+      "forEach": "ROW",
+      "function": "public.update_updated_at_column()",
+      "definition": "CREATE TRIGGER trg_services_updated_at BEFORE UPDATE ON public.services FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column()"
+    },
+    {
+      "name": "trg_site_settings_updated_at",
+      "table": "site_settings",
+      "timing": "BEFORE",
+      "events": "UPDATE",
+      "forEach": "ROW",
+      "function": "public.update_updated_at_column()",
+      "definition": "CREATE TRIGGER trg_site_settings_updated_at BEFORE UPDATE ON public.site_settings FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column()"
+    },
+    {
+      "name": "trg_testimonials_updated_at",
+      "table": "testimonials",
+      "timing": "BEFORE",
+      "events": "UPDATE",
+      "forEach": "ROW",
+      "function": "public.update_updated_at_column()",
+      "definition": "CREATE TRIGGER trg_testimonials_updated_at BEFORE UPDATE ON public.testimonials FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column()"
+    },
+    {
+      "name": "trigger_generate_booking_reference",
+      "table": "bookings",
+      "timing": "BEFORE",
+      "events": "INSERT",
+      "forEach": "ROW",
+      "function": "public.generate_booking_reference()",
+      "definition": "CREATE TRIGGER trigger_generate_booking_reference BEFORE INSERT ON public.bookings FOR EACH ROW EXECUTE FUNCTION public.generate_booking_reference()"
+    }
+  ],
+  "policies": [
+    {
+      "table": "services",
+      "name": "Admin write services",
+      "permissive": true,
+      "command": "ALL",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "payments",
+      "name": "Admins can insert payments",
+      "permissive": true,
+      "command": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": null,
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "bookings",
+      "name": "Admins can update bookings",
+      "permissive": true,
+      "command": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "payments",
+      "name": "Admins can update payments",
+      "permissive": true,
+      "command": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "profiles",
+      "name": "Admins can update profiles",
+      "permissive": true,
+      "command": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "bookings",
+      "name": "Admins can view all bookings",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": null
+    },
+    {
+      "table": "payments",
+      "name": "Admins can view all payments",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": null
+    },
+    {
+      "table": "profiles",
+      "name": "Admins can view all profiles",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": null
+    },
+    {
+      "table": "blocked_dates",
+      "name": "Admins delete blocked dates",
+      "permissive": true,
+      "command": "DELETE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": null
+    },
+    {
+      "table": "bookings",
+      "name": "Admins delete bookings",
+      "permissive": true,
+      "command": "DELETE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(public.is_admin() AND (EXISTS ( SELECT 1 FROM public.profiles WHERE ((profiles.id = auth.uid()) AND (profiles.is_active = true)))))",
+      "withCheck": null
+    },
+    {
+      "table": "blocked_dates",
+      "name": "Admins insert blocked dates",
+      "permissive": true,
+      "command": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": null,
+      "withCheck": "(public.is_admin() AND (created_by = auth.uid()))"
+    },
+    {
+      "table": "site_settings",
+      "name": "Admins insert site_settings",
+      "permissive": true,
+      "command": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": null,
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "gallery",
+      "name": "Admins manage gallery",
+      "permissive": true,
+      "command": "ALL",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "services",
+      "name": "Admins manage services",
+      "permissive": true,
+      "command": "ALL",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "site_settings",
+      "name": "Admins manage site settings",
+      "permissive": true,
+      "command": "ALL",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "testimonials",
+      "name": "Admins manage testimonials",
+      "permissive": true,
+      "command": "ALL",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "bookings",
+      "name": "Admins modify bookings",
+      "permissive": true,
+      "command": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "blocked_dates",
+      "name": "Admins read blocked dates",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": null
+    },
+    {
+      "table": "bookings",
+      "name": "Admins read bookings",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": null
+    },
+    {
+      "table": "messages",
+      "name": "Admins read messages",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": null
+    },
+    {
+      "table": "site_settings",
+      "name": "Admins read site_settings",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": null
+    },
+    {
+      "table": "blocked_dates",
+      "name": "Admins update blocked dates",
+      "permissive": true,
+      "command": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "bookings",
+      "name": "Admins update bookings",
+      "permissive": true,
+      "command": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "messages",
+      "name": "Admins update messages",
+      "permissive": true,
+      "command": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "site_settings",
+      "name": "Admins update site_settings",
+      "permissive": true,
+      "command": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "public.is_admin()",
+      "withCheck": "public.is_admin()"
+    },
+    {
+      "table": "blocked_dates",
+      "name": "Public can view blocked dates",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "authenticated",
+        "anon"
+      ],
+      "using": "true",
+      "withCheck": null
+    },
+    {
+      "table": "services",
+      "name": "Public read services",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "using": "true",
+      "withCheck": null
+    },
+    {
+      "table": "bookings",
+      "name": "Users can view their own bookings",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(user_id = auth.uid())",
+      "withCheck": null
+    },
+    {
+      "table": "payments",
+      "name": "Users can view their own payments",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(user_id = auth.uid())",
+      "withCheck": null
+    },
+    {
+      "table": "profiles",
+      "name": "Users can view their own profile",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(id = auth.uid())",
+      "withCheck": null
+    },
+    {
+      "table": "profiles",
+      "name": "Users update profile",
+      "permissive": true,
+      "command": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "((id = auth.uid()) OR public.is_admin())",
+      "withCheck": "((id = auth.uid()) OR public.is_admin())"
+    },
+    {
+      "table": "profiles",
+      "name": "Users view profile",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "((id = auth.uid()) OR public.is_admin())",
+      "withCheck": null
+    },
+    {
+      "table": "audit_logs",
+      "name": "audit_logs_read_active_owner",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "(public.is_owner() AND (EXISTS ( SELECT 1 FROM public.profiles WHERE ((profiles.id = auth.uid()) AND (profiles.is_active = true)))))",
+      "withCheck": null
+    },
+    {
+      "table": "permissions",
+      "name": "permissions_read_active_owner_admin",
+      "permissive": true,
+      "command": "SELECT",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "((public.is_owner() OR public.is_admin()) AND (EXISTS ( SELECT 1 FROM public.profiles WHERE ((profiles.id = auth.uid()) AND (profiles.is_active = true)))))",
+      "withCheck": null
+    },
+    {
+      "table": "user_permissions",
+      "name": "user_permissions_manage_active_owner_admin",
+      "permissive": true,
+      "command": "ALL",
+      "roles": [
+        "authenticated"
+      ],
+      "using": "((public.is_owner() OR public.is_admin()) AND (EXISTS ( SELECT 1 FROM public.profiles WHERE ((profiles.id = auth.uid()) AND (profiles.is_active = true)))))",
+      "withCheck": "((public.is_owner() OR public.is_admin()) AND (EXISTS ( SELECT 1 FROM public.profiles WHERE ((profiles.id = auth.uid()) AND (profiles.is_active = true)))))"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "blocked_dates_event_date_idx",
+      "table": "blocked_dates",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "event_date"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX blocked_dates_event_date_idx ON public.blocked_dates USING btree (event_date)"
+    },
+    {
+      "name": "bookings_active_event_date_unique",
+      "table": "bookings",
+      "unique": true,
+      "method": "btree",
+      "columns": [
+        "event_date) WHERE (lower(COALESCE(status, ''::text)) = ANY (ARRAY['pending'::text, 'confirmed'::text])"
+      ],
+      "predicate": null,
+      "functional": true,
+      "definition": "CREATE UNIQUE INDEX bookings_active_event_date_unique ON public.bookings USING btree (event_date) WHERE (lower(COALESCE(status, ''::text)) = ANY (ARRAY['pending'::text, 'confirmed'::text]))"
+    },
+    {
+      "name": "bookings_archived_at_idx",
+      "table": "bookings",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "archived_at) WHERE (archived_at IS NOT NULL"
+      ],
+      "predicate": null,
+      "functional": true,
+      "definition": "CREATE INDEX bookings_archived_at_idx ON public.bookings USING btree (archived_at) WHERE (archived_at IS NOT NULL)"
+    },
+    {
+      "name": "bookings_booking_reference_unique",
+      "table": "bookings",
+      "unique": true,
+      "method": "btree",
+      "columns": [
+        "booking_reference) WHERE (booking_reference IS NOT NULL"
+      ],
+      "predicate": null,
+      "functional": true,
+      "definition": "CREATE UNIQUE INDEX bookings_booking_reference_unique ON public.bookings USING btree (booking_reference) WHERE (booking_reference IS NOT NULL)"
+    },
+    {
+      "name": "idx_audit_logs_actor_user_id",
+      "table": "audit_logs",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "actor_user_id"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_audit_logs_actor_user_id ON public.audit_logs USING btree (actor_user_id)"
+    },
+    {
+      "name": "idx_audit_logs_created_at",
+      "table": "audit_logs",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "created_at DESC"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_audit_logs_created_at ON public.audit_logs USING btree (created_at DESC)"
+    },
+    {
+      "name": "idx_audit_logs_target_user_id",
+      "table": "audit_logs",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "target_user_id"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_audit_logs_target_user_id ON public.audit_logs USING btree (target_user_id)"
+    },
+    {
+      "name": "idx_bookings_email",
+      "table": "bookings",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "email"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_bookings_email ON public.bookings USING btree (email)"
+    },
+    {
+      "name": "idx_bookings_event_date",
+      "table": "bookings",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "event_date"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_bookings_event_date ON public.bookings USING btree (event_date)"
+    },
+    {
+      "name": "idx_bookings_status",
+      "table": "bookings",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "status"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_bookings_status ON public.bookings USING btree (status)"
+    },
+    {
+      "name": "idx_gallery_category",
+      "table": "gallery",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "category"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_gallery_category ON public.gallery USING btree (category)"
+    },
+    {
+      "name": "idx_gallery_display_order",
+      "table": "gallery",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "display_order"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_gallery_display_order ON public.gallery USING btree (display_order)"
+    },
+    {
+      "name": "idx_messages_email",
+      "table": "messages",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "email"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_messages_email ON public.messages USING btree (email)"
+    },
+    {
+      "name": "idx_messages_status",
+      "table": "messages",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "status"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_messages_status ON public.messages USING btree (status)"
+    },
+    {
+      "name": "idx_profiles_role",
+      "table": "profiles",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "role"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_profiles_role ON public.profiles USING btree (role)"
+    },
+    {
+      "name": "idx_services_category",
+      "table": "services",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "category"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_services_category ON public.services USING btree (category)"
+    },
+    {
+      "name": "idx_services_slug",
+      "table": "services",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "slug"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_services_slug ON public.services USING btree (slug)"
+    },
+    {
+      "name": "idx_site_settings_key",
+      "table": "site_settings",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "key"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_site_settings_key ON public.site_settings USING btree (key)"
+    },
+    {
+      "name": "idx_testimonials_display_order",
+      "table": "testimonials",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "display_order"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_testimonials_display_order ON public.testimonials USING btree (display_order)"
+    },
+    {
+      "name": "idx_user_permissions_permission_key",
+      "table": "user_permissions",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "permission_key"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_user_permissions_permission_key ON public.user_permissions USING btree (permission_key)"
+    },
+    {
+      "name": "idx_user_permissions_user_id",
+      "table": "user_permissions",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "user_id"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX idx_user_permissions_user_id ON public.user_permissions USING btree (user_id)"
+    },
+    {
+      "name": "payments_booking_id_idx",
+      "table": "payments",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "booking_id"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX payments_booking_id_idx ON public.payments USING btree (booking_id)"
+    },
+    {
+      "name": "payments_created_at_idx",
+      "table": "payments",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "created_at DESC"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX payments_created_at_idx ON public.payments USING btree (created_at DESC)"
+    },
+    {
+      "name": "payments_status_idx",
+      "table": "payments",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "status"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX payments_status_idx ON public.payments USING btree (status)"
+    },
+    {
+      "name": "payments_user_id_idx",
+      "table": "payments",
+      "unique": false,
+      "method": "btree",
+      "columns": [
+        "user_id"
+      ],
+      "predicate": null,
+      "functional": false,
+      "definition": "CREATE INDEX payments_user_id_idx ON public.payments USING btree (user_id)"
+    }
+  ],
+  "constraints": [
+    {
+      "table": "bookings",
+      "name": "bookings_booking_amount_check",
+      "type": "CHECK",
+      "expression": "((booking_amount >= (0)::numeric))",
+      "definition": "CHECK ((booking_amount >= (0)::numeric))"
+    },
+    {
+      "table": "payments",
+      "name": "payments_amount_check",
+      "type": "CHECK",
+      "expression": "((amount > (0)::numeric))",
+      "definition": "CHECK ((amount > (0)::numeric))"
+    },
+    {
+      "table": "payments",
+      "name": "payments_currency_check",
+      "type": "CHECK",
+      "expression": "((currency = ANY (ARRAY['NGN'::text, 'USD'::text, 'GBP'::text, 'EUR'::text])))",
+      "definition": "CHECK ((currency = ANY (ARRAY['NGN'::text, 'USD'::text, 'GBP'::text, 'EUR'::text])))"
+    },
+    {
+      "table": "payments",
+      "name": "payments_payment_type_check",
+      "type": "CHECK",
+      "expression": "((payment_type = ANY (ARRAY['deposit'::text, 'balance'::text, 'full'::text, 'refund'::text])))",
+      "definition": "CHECK ((payment_type = ANY (ARRAY['deposit'::text, 'balance'::text, 'full'::text, 'refund'::text])))"
+    },
+    {
+      "table": "payments",
+      "name": "payments_provider_check",
+      "type": "CHECK",
+      "expression": "((provider = ANY (ARRAY['paystack'::text, 'flutterwave'::text, 'manual'::text])))",
+      "definition": "CHECK ((provider = ANY (ARRAY['paystack'::text, 'flutterwave'::text, 'manual'::text])))"
+    },
+    {
+      "table": "payments",
+      "name": "payments_status_check",
+      "type": "CHECK",
+      "expression": "((status = ANY (ARRAY['pending'::text, 'processing'::text, 'successful'::text, 'failed'::text, 'cancelled'::text, 'refunded'::text, 'partially_refunded'::text])))",
+      "definition": "CHECK ((status = ANY (ARRAY['pending'::text, 'processing'::text, 'successful'::text, 'failed'::text, 'cancelled'::text, 'refunded'::text, 'partially_refunded'::text])))"
+    },
+    {
+      "table": "profiles",
+      "name": "profiles_role_check",
+      "type": "CHECK",
+      "expression": "((role = ANY (ARRAY['owner'::text, 'admin'::text, 'staff'::text, 'user'::text])))",
+      "definition": "CHECK ((role = ANY (ARRAY['owner'::text, 'admin'::text, 'staff'::text, 'user'::text])))"
+    },
+    {
+      "table": "audit_logs",
+      "name": "audit_logs_pkey",
+      "type": "PRIMARY KEY",
+      "columns": [
+        "id"
+      ],
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table": "blocked_dates",
+      "name": "blocked_dates_pkey",
+      "type": "PRIMARY KEY",
+      "columns": [
+        "event_date"
+      ],
+      "definition": "PRIMARY KEY (event_date)"
+    },
+    {
+      "table": "bookings",
+      "name": "bookings_pkey",
+      "type": "PRIMARY KEY",
+      "columns": [
+        "id"
+      ],
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table": "gallery",
+      "name": "gallery_pkey",
+      "type": "PRIMARY KEY",
+      "columns": [
+        "id"
+      ],
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table": "messages",
+      "name": "messages_pkey",
+      "type": "PRIMARY KEY",
+      "columns": [
+        "id"
+      ],
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table": "payments",
+      "name": "payments_gateway_reference_key",
+      "type": "UNIQUE",
+      "columns": [
+        "gateway_reference"
+      ],
+      "definition": "UNIQUE (gateway_reference)"
+    },
+    {
+      "table": "payments",
+      "name": "payments_pkey",
+      "type": "PRIMARY KEY",
+      "columns": [
+        "id"
+      ],
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table": "permissions",
+      "name": "permissions_permission_key_key",
+      "type": "UNIQUE",
+      "columns": [
+        "permission_key"
+      ],
+      "definition": "UNIQUE (permission_key)"
+    },
+    {
+      "table": "permissions",
+      "name": "permissions_pkey",
+      "type": "PRIMARY KEY",
+      "columns": [
+        "id"
+      ],
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table": "profiles",
+      "name": "profiles_pkey",
+      "type": "PRIMARY KEY",
+      "columns": [
+        "id"
+      ],
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table": "services",
+      "name": "services_pkey",
+      "type": "PRIMARY KEY",
+      "columns": [
+        "id"
+      ],
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table": "services",
+      "name": "services_slug_key",
+      "type": "UNIQUE",
+      "columns": [
+        "slug"
+      ],
+      "definition": "UNIQUE (slug)"
+    },
+    {
+      "table": "site_settings",
+      "name": "site_settings_key_key",
+      "type": "UNIQUE",
+      "columns": [
+        "key"
+      ],
+      "definition": "UNIQUE (key)"
+    },
+    {
+      "table": "site_settings",
+      "name": "site_settings_pkey",
+      "type": "PRIMARY KEY",
+      "columns": [
+        "id"
+      ],
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table": "testimonials",
+      "name": "testimonials_pkey",
+      "type": "PRIMARY KEY",
+      "columns": [
+        "id"
+      ],
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table": "user_permissions",
+      "name": "user_permissions_pkey",
+      "type": "PRIMARY KEY",
+      "columns": [
+        "id"
+      ],
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "table": "user_permissions",
+      "name": "user_permissions_user_permission_key_unique",
+      "type": "UNIQUE",
+      "columns": [
+        "user_id",
+        "permission_key"
+      ],
+      "definition": "UNIQUE (user_id, permission_key)"
+    },
+    {
+      "table": "audit_logs",
+      "name": "audit_logs_actor_user_id_fkey",
+      "type": "FOREIGN KEY",
+      "columns": [
+        "actor_user_id"
+      ],
+      "references": "public.profiles",
+      "referencedColumns": [
+        "id"
+      ],
+      "onDelete": "SET NULL",
+      "onUpdate": "NO ACTION",
+      "definition": "FOREIGN KEY (actor_user_id) REFERENCES public.profiles(id) ON DELETE SET NULL"
+    },
+    {
+      "table": "audit_logs",
+      "name": "audit_logs_target_user_id_fkey",
+      "type": "FOREIGN KEY",
+      "columns": [
+        "target_user_id"
+      ],
+      "references": "public.profiles",
+      "referencedColumns": [
+        "id"
+      ],
+      "onDelete": "SET NULL",
+      "onUpdate": "NO ACTION",
+      "definition": "FOREIGN KEY (target_user_id) REFERENCES public.profiles(id) ON DELETE SET NULL"
+    },
+    {
+      "table": "blocked_dates",
+      "name": "blocked_dates_created_by_fkey",
+      "type": "FOREIGN KEY",
+      "columns": [
+        "created_by"
+      ],
+      "references": "auth.users",
+      "referencedColumns": [
+        "id"
+      ],
+      "onDelete": "SET NULL",
+      "onUpdate": "NO ACTION",
+      "definition": "FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL"
+    },
+    {
+      "table": "bookings",
+      "name": "bookings_user_id_fkey",
+      "type": "FOREIGN KEY",
+      "columns": [
+        "user_id"
+      ],
+      "references": "public.profiles",
+      "referencedColumns": [
+        "id"
+      ],
+      "onDelete": "SET NULL",
+      "onUpdate": "NO ACTION",
+      "definition": "FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE SET NULL"
+    },
+    {
+      "table": "messages",
+      "name": "messages_user_id_fkey",
+      "type": "FOREIGN KEY",
+      "columns": [
+        "user_id"
+      ],
+      "references": "public.profiles",
+      "referencedColumns": [
+        "id"
+      ],
+      "onDelete": "SET NULL",
+      "onUpdate": "NO ACTION",
+      "definition": "FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE SET NULL"
+    },
+    {
+      "table": "payments",
+      "name": "payments_booking_id_fkey",
+      "type": "FOREIGN KEY",
+      "columns": [
+        "booking_id"
+      ],
+      "references": "public.bookings",
+      "referencedColumns": [
+        "id"
+      ],
+      "onDelete": "CASCADE",
+      "onUpdate": "NO ACTION",
+      "definition": "FOREIGN KEY (booking_id) REFERENCES public.bookings(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "payments",
+      "name": "payments_user_id_fkey",
+      "type": "FOREIGN KEY",
+      "columns": [
+        "user_id"
+      ],
+      "references": "public.profiles",
+      "referencedColumns": [
+        "id"
+      ],
+      "onDelete": "SET NULL",
+      "onUpdate": "NO ACTION",
+      "definition": "FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE SET NULL"
+    },
+    {
+      "table": "profiles",
+      "name": "profiles_id_fkey",
+      "type": "FOREIGN KEY",
+      "columns": [
+        "id"
+      ],
+      "references": "auth.users",
+      "referencedColumns": [
+        "id"
+      ],
+      "onDelete": "CASCADE",
+      "onUpdate": "NO ACTION",
+      "definition": "FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE"
+    },
+    {
+      "table": "site_settings",
+      "name": "site_settings_updated_by_fkey",
+      "type": "FOREIGN KEY",
+      "columns": [
+        "updated_by"
+      ],
+      "references": "public.profiles",
+      "referencedColumns": [
+        "id"
+      ],
+      "onDelete": "SET NULL",
+      "onUpdate": "NO ACTION",
+      "definition": "FOREIGN KEY (updated_by) REFERENCES public.profiles(id) ON DELETE SET NULL"
+    },
+    {
+      "table": "user_permissions",
+      "name": "user_permissions_permission_key_fkey",
+      "type": "FOREIGN KEY",
+      "columns": [
+        "permission_key"
+      ],
+      "references": "public.permissions",
+      "referencedColumns": [
+        "permission_key"
+      ],
+      "onDelete": "CASCADE",
+      "onUpdate": "NO ACTION",
+      "definition": "FOREIGN KEY (permission_key) REFERENCES public.permissions(permission_key) ON DELETE CASCADE"
+    },
+    {
+      "table": "user_permissions",
+      "name": "user_permissions_user_id_fkey",
+      "type": "FOREIGN KEY",
+      "columns": [
+        "user_id"
+      ],
+      "references": "public.profiles",
+      "referencedColumns": [
+        "id"
+      ],
+      "onDelete": "CASCADE",
+      "onUpdate": "NO ACTION",
+      "definition": "FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE"
+    }
+  ],
+  "grants": [
+    {
+      "kind": "SCHEMA",
+      "object": "public",
+      "roles": [
+        "postgres"
+      ],
+      "privileges": [
+        "USAGE"
+      ]
+    },
+    {
+      "kind": "SCHEMA",
+      "object": "public",
+      "roles": [
+        "anon"
+      ],
+      "privileges": [
+        "USAGE"
+      ]
+    },
+    {
+      "kind": "SCHEMA",
+      "object": "public",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "USAGE"
+      ]
+    },
+    {
+      "kind": "SCHEMA",
+      "object": "public",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "USAGE"
+      ]
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.is_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.is_owner()",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.purge_archived_bookings()",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.audit_logs",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "MAINTAIN",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.audit_logs",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.blocked_dates",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.blocked_dates",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ]
+    },
+    {
+      "kind": "SEQUENCE",
+      "object": "public.booking_reference_seq",
+      "roles": [
+        "anon"
+      ],
+      "privileges": [
+        "SELECT",
+        "USAGE"
+      ]
+    },
+    {
+      "kind": "SEQUENCE",
+      "object": "public.booking_reference_seq",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "SELECT",
+        "USAGE"
+      ]
+    },
+    {
+      "kind": "SEQUENCE",
+      "object": "public.booking_reference_seq",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "SELECT",
+        "USAGE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.bookings",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.bookings",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.gallery",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "MAINTAIN",
+        "REFERENCES",
+        "TRIGGER",
+        "TRUNCATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.gallery",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "MAINTAIN",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.messages",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "INSERT",
+        "MAINTAIN",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.messages",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.payments",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.payments",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.permissions",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "MAINTAIN",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.permissions",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.profiles",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.profiles",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.services",
+      "roles": [
+        "anon"
+      ],
+      "privileges": [
+        "MAINTAIN",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.services",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "INSERT",
+        "MAINTAIN",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE",
+        "UPDATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.services",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "DELETE",
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.site_settings",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.site_settings",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "INSERT",
+        "SELECT",
+        "UPDATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.testimonials",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "MAINTAIN",
+        "REFERENCES",
+        "TRIGGER",
+        "TRUNCATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.testimonials",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "MAINTAIN",
+        "REFERENCES",
+        "SELECT",
+        "TRIGGER",
+        "TRUNCATE"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.user_permissions",
+      "roles": [
+        "authenticated"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.user_permissions",
+      "roles": [
+        "service_role"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    }
+  ],
+  "revokes": [
+    {
+      "kind": "FUNCTION",
+      "object": "public.block_event_date(p_event_date date, p_note text)",
+      "roles": [
+        "PUBLIC"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.get_event_availability(p_start_date date, p_end_date date)",
+      "roles": [
+        "PUBLIC"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.handle_new_user()",
+      "roles": [
+        "PUBLIC"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.is_admin()",
+      "roles": [
+        "PUBLIC"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.is_owner()",
+      "roles": [
+        "PUBLIC"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.prevent_booking_on_blocked_date()",
+      "roles": [
+        "PUBLIC"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.prevent_role_escalation()",
+      "roles": [
+        "PUBLIC"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.purge_archived_bookings()",
+      "roles": [
+        "PUBLIC"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.rls_auto_enable()",
+      "roles": [
+        "PUBLIC"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.unblock_event_date(p_event_date date)",
+      "roles": [
+        "PUBLIC"
+      ],
+      "privileges": [
+        "ALL"
+      ]
+    }
+  ],
+  "defaultPrivileges": [
+    {
+      "forRole": "postgres",
+      "schema": "public",
+      "on": "SEQUENCES",
+      "grantee": "postgres",
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "forRole": "supabase_admin",
+      "schema": "public",
+      "on": "SEQUENCES",
+      "grantee": "postgres",
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "forRole": "supabase_admin",
+      "schema": "public",
+      "on": "SEQUENCES",
+      "grantee": "anon",
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "forRole": "supabase_admin",
+      "schema": "public",
+      "on": "SEQUENCES",
+      "grantee": "authenticated",
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "forRole": "supabase_admin",
+      "schema": "public",
+      "on": "SEQUENCES",
+      "grantee": "service_role",
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "forRole": "postgres",
+      "schema": "public",
+      "on": "FUNCTIONS",
+      "grantee": "postgres",
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "forRole": "supabase_admin",
+      "schema": "public",
+      "on": "FUNCTIONS",
+      "grantee": "postgres",
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "forRole": "supabase_admin",
+      "schema": "public",
+      "on": "FUNCTIONS",
+      "grantee": "anon",
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "forRole": "supabase_admin",
+      "schema": "public",
+      "on": "FUNCTIONS",
+      "grantee": "authenticated",
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "forRole": "supabase_admin",
+      "schema": "public",
+      "on": "FUNCTIONS",
+      "grantee": "service_role",
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "forRole": "postgres",
+      "schema": "public",
+      "on": "TABLES",
+      "grantee": "postgres",
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "forRole": "postgres",
+      "schema": "public",
+      "on": "TABLES",
+      "grantee": "anon",
+      "privileges": [
+        "REFERENCES",
+        "TRIGGER",
+        "TRUNCATE",
+        "MAINTAIN"
+      ]
+    },
+    {
+      "forRole": "postgres",
+      "schema": "public",
+      "on": "TABLES",
+      "grantee": "authenticated",
+      "privileges": [
+        "REFERENCES",
+        "TRIGGER",
+        "TRUNCATE",
+        "MAINTAIN"
+      ]
+    },
+    {
+      "forRole": "postgres",
+      "schema": "public",
+      "on": "TABLES",
+      "grantee": "service_role",
+      "privileges": [
+        "REFERENCES",
+        "TRIGGER",
+        "TRUNCATE",
+        "MAINTAIN"
+      ]
+    },
+    {
+      "forRole": "supabase_admin",
+      "schema": "public",
+      "on": "TABLES",
+      "grantee": "postgres",
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "forRole": "supabase_admin",
+      "schema": "public",
+      "on": "TABLES",
+      "grantee": "anon",
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "forRole": "supabase_admin",
+      "schema": "public",
+      "on": "TABLES",
+      "grantee": "authenticated",
+      "privileges": [
+        "ALL"
+      ]
+    },
+    {
+      "forRole": "supabase_admin",
+      "schema": "public",
+      "on": "TABLES",
+      "grantee": "service_role",
+      "privileges": [
+        "ALL"
+      ]
+    }
+  ],
+  "owners": [
+    {
+      "kind": "SCHEMA",
+      "object": "public",
+      "owner": "pg_database_owner"
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.block_event_date(p_event_date date, p_note text)",
+      "owner": "postgres"
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.generate_booking_reference()",
+      "owner": "postgres"
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.get_event_availability(p_start_date date, p_end_date date)",
+      "owner": "postgres"
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.handle_new_user()",
+      "owner": "postgres"
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.is_admin()",
+      "owner": "postgres"
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.is_owner()",
+      "owner": "postgres"
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.prevent_booking_on_blocked_date()",
+      "owner": "postgres"
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.prevent_role_escalation()",
+      "owner": "postgres"
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.purge_archived_bookings()",
+      "owner": "postgres"
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.rls_auto_enable()",
+      "owner": "postgres"
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.unblock_event_date(p_event_date date)",
+      "owner": "postgres"
+    },
+    {
+      "kind": "FUNCTION",
+      "object": "public.update_updated_at_column()",
+      "owner": "postgres"
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.audit_logs",
+      "owner": "postgres"
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.blocked_dates",
+      "owner": "postgres"
+    },
+    {
+      "kind": "SEQUENCE",
+      "object": "public.booking_reference_seq",
+      "owner": "postgres"
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.bookings",
+      "owner": "postgres"
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.gallery",
+      "owner": "postgres"
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.messages",
+      "owner": "postgres"
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.payments",
+      "owner": "postgres"
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.permissions",
+      "owner": "postgres"
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.profiles",
+      "owner": "postgres"
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.services",
+      "owner": "postgres"
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.site_settings",
+      "owner": "postgres"
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.testimonials",
+      "owner": "postgres"
+    },
+    {
+      "kind": "TABLE",
+      "object": "public.user_permissions",
+      "owner": "postgres"
+    }
+  ],
+  "extensions": [],
+  "schemas": [
+    "public"
+  ],
+  "findings": {
+    "foreignKeysWithoutLeadingIndex": [
+      "blocked_dates.created_by -> auth.users",
+      "bookings.user_id -> public.profiles",
+      "messages.user_id -> public.profiles",
+      "site_settings.updated_by -> public.profiles"
+    ],
+    "redundantIndexes": [
+      {
+        "index": "blocked_dates_event_date_idx",
+        "table": "blocked_dates",
+        "columns": [
+          "event_date"
+        ],
+        "coveredBy": "blocked_dates_pkey",
+        "exact": true
+      },
+      {
+        "index": "idx_services_slug",
+        "table": "services",
+        "columns": [
+          "slug"
+        ],
+        "coveredBy": "services_slug_key",
+        "exact": true
+      },
+      {
+        "index": "idx_site_settings_key",
+        "table": "site_settings",
+        "columns": [
+          "key"
+        ],
+        "coveredBy": "site_settings_key_key",
+        "exact": true
+      },
+      {
+        "index": "idx_user_permissions_user_id",
+        "table": "user_permissions",
+        "columns": [
+          "user_id"
+        ],
+        "coveredBy": "user_permissions_user_permission_key_unique",
+        "exact": false
+      }
+    ],
+    "duplicatePolicies": [
+      {
+        "table": "services",
+        "command": "ALL",
+        "policies": [
+          "Admin write services",
+          "Admins manage services"
+        ]
+      },
+      {
+        "table": "bookings",
+        "command": "UPDATE",
+        "policies": [
+          "Admins can update bookings",
+          "Admins modify bookings",
+          "Admins update bookings"
+        ]
+      },
+      {
+        "table": "bookings",
+        "command": "SELECT",
+        "policies": [
+          "Admins can view all bookings",
+          "Admins read bookings"
+        ]
+      }
+    ],
+    "tablesWithoutPolicyForCommand": {
+      "audit_logs": [
+        "INSERT",
+        "UPDATE",
+        "DELETE"
+      ],
+      "blocked_dates": [],
+      "bookings": [
+        "INSERT"
+      ],
+      "gallery": [],
+      "messages": [
+        "INSERT",
+        "DELETE"
+      ],
+      "payments": [
+        "DELETE"
+      ],
+      "permissions": [
+        "INSERT",
+        "UPDATE",
+        "DELETE"
+      ],
+      "profiles": [
+        "INSERT",
+        "DELETE"
+      ],
+      "services": [],
+      "site_settings": [],
+      "testimonials": [],
+      "user_permissions": []
+    },
+    "policiesNotCheckingIsActive": [
+      "services: Admin write services",
+      "payments: Admins can insert payments",
+      "bookings: Admins can update bookings",
+      "payments: Admins can update payments",
+      "profiles: Admins can update profiles",
+      "bookings: Admins can view all bookings",
+      "payments: Admins can view all payments",
+      "profiles: Admins can view all profiles",
+      "blocked_dates: Admins delete blocked dates",
+      "blocked_dates: Admins insert blocked dates",
+      "site_settings: Admins insert site_settings",
+      "gallery: Admins manage gallery",
+      "services: Admins manage services",
+      "site_settings: Admins manage site settings",
+      "testimonials: Admins manage testimonials",
+      "bookings: Admins modify bookings",
+      "blocked_dates: Admins read blocked dates",
+      "bookings: Admins read bookings",
+      "messages: Admins read messages",
+      "site_settings: Admins read site_settings",
+      "blocked_dates: Admins update blocked dates",
+      "bookings: Admins update bookings",
+      "messages: Admins update messages",
+      "site_settings: Admins update site_settings",
+      "profiles: Users update profile",
+      "profiles: Users view profile"
+    ],
+    "roleChangeProtection": {
+      "trigger": "trg_prevent_role_escalation"
+    },
+    "sensitivePrivileges": [
+      {
+        "table": "audit_logs",
+        "role": "authenticated",
+        "privileges": [
+          "MAINTAIN",
+          "REFERENCES",
+          "SELECT",
+          "TRIGGER",
+          "TRUNCATE"
+        ]
+      },
+      {
+        "table": "blocked_dates",
+        "role": "authenticated",
+        "privileges": [
+          "ALL"
+        ]
+      },
+      {
+        "table": "bookings",
+        "role": "authenticated",
+        "privileges": [
+          "ALL"
+        ]
+      },
+      {
+        "table": "gallery",
+        "role": "authenticated",
+        "privileges": [
+          "MAINTAIN",
+          "REFERENCES",
+          "TRIGGER",
+          "TRUNCATE"
+        ]
+      },
+      {
+        "table": "messages",
+        "role": "authenticated",
+        "privileges": [
+          "INSERT",
+          "MAINTAIN",
+          "REFERENCES",
+          "SELECT",
+          "TRIGGER",
+          "TRUNCATE",
+          "UPDATE"
+        ]
+      },
+      {
+        "table": "payments",
+        "role": "authenticated",
+        "privileges": [
+          "ALL"
+        ]
+      },
+      {
+        "table": "permissions",
+        "role": "authenticated",
+        "privileges": [
+          "MAINTAIN",
+          "REFERENCES",
+          "SELECT",
+          "TRIGGER",
+          "TRUNCATE"
+        ]
+      },
+      {
+        "table": "profiles",
+        "role": "authenticated",
+        "privileges": [
+          "ALL"
+        ]
+      },
+      {
+        "table": "services",
+        "role": "anon",
+        "privileges": [
+          "MAINTAIN",
+          "REFERENCES",
+          "SELECT",
+          "TRIGGER",
+          "TRUNCATE"
+        ]
+      },
+      {
+        "table": "services",
+        "role": "authenticated",
+        "privileges": [
+          "INSERT",
+          "MAINTAIN",
+          "REFERENCES",
+          "SELECT",
+          "TRIGGER",
+          "TRUNCATE",
+          "UPDATE"
+        ]
+      },
+      {
+        "table": "testimonials",
+        "role": "authenticated",
+        "privileges": [
+          "MAINTAIN",
+          "REFERENCES",
+          "TRIGGER",
+          "TRUNCATE"
+        ]
+      },
+      {
+        "table": "user_permissions",
+        "role": "authenticated",
+        "privileges": [
+          "ALL"
+        ]
+      }
+    ],
+    "functionsWithNoApiRoleExecute": [
+      "public.block_event_date(p_event_date date, p_note text DEFAULT NULL::text)",
+      "public.get_event_availability(p_start_date date, p_end_date date)",
+      "public.handle_new_user()",
+      "public.prevent_booking_on_blocked_date()",
+      "public.prevent_role_escalation()",
+      "public.rls_auto_enable()",
+      "public.unblock_event_date(p_event_date date)"
+    ],
+    "functionsExecutableByPublic": [
+      "public.generate_booking_reference()",
+      "public.update_updated_at_column()"
+    ],
+    "definerFunctionsWithoutPgTempLast": [
+      "public.block_event_date(p_event_date date, p_note text DEFAULT NULL::text) search_path=public",
+      "public.get_event_availability(p_start_date date, p_end_date date) search_path=public",
+      "public.handle_new_user() search_path=public",
+      "public.prevent_booking_on_blocked_date() search_path=public",
+      "public.unblock_event_date(p_event_date date) search_path=public"
+    ]
+  }
+}

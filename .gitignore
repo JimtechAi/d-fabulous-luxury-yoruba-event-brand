@@ -3,9 +3,43 @@ build/
 dist/
 coverage/
 .DS_Store
+Thumbs.db
+.idea/
+*.swp
 *.log
-.env*
-!.env.example
+npm-debug.log*
+.vite/
+*.tsbuildinfo
+playwright-report/
+test-results/
 
+# Secrets and environment files (any directory depth).
+# Only placeholder template files (.env.example) may be committed.
+.env
+.env.*
+*.env
+!.env.example
+!.env.*.example
+.dev.vars
+*.pem
+*.key
+*.p12
+*.pfx
+service-account*.json
+
+# Vercel
 .vercel
-.env*
+
+# Supabase CLI local state (linked project ref, temp files, local DB data)
+supabase/.temp/
+supabase/.branches/
+
+# Supabase function / project secrets (any env file at any depth)
+supabase/.env
+supabase/.env.*
+supabase/functions/.env
+supabase/functions/.env.*
+supabase/functions/**/.env
+supabase/functions/**/.env.*
+!supabase/functions/.env.example
+!supabase/functions/**/.env.example

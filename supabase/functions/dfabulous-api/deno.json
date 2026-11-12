@@ -1,0 +1,12 @@
+{
+  "imports": {
+    "hono": "npm:hono@4.13.17",
+    "@supabase/supabase-js": "npm:@supabase/supabase-js@2.112.3",
+    "@std/assert": "jsr:@std/assert@1"
+  },
+  "tasks": {
+    "check": "deno check index.ts",
+    "test": "deno test --allow-env --no-prompt tests/"
+  },
+  "lock": true
+}
