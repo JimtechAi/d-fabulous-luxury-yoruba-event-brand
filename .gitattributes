@@ -1,0 +1,3 @@
+# Byte-exact files: the verified production schema dump and everything generated from it must never be line-ending converted
+# (tests compare SHA-256 hashes and generated output byte for byte).
+supabase/staging/** -text
